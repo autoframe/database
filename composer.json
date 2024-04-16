@@ -1,0 +1,34 @@
+{
+    "type": "library",
+    "name": "autoframe/database",
+    "description": "PDO Table/ Database, Entity, Database Layer ",
+    "license": "MIT",
+    "homepage": "https://github.com/autoframe",
+    "require": {
+        "php": ">7.4",
+        "autoframe/components-exception": ">2.0"
+    },
+    "version": "1.0.0",
+    "authors": [
+        {
+            "name": "Nistor Alexandru Marius",
+            "homepage": "https://autoframe.ro",
+            "role": "Developer"
+        }
+    ],
+    "keywords": ["PDO", "Database", "Entity", "Database Layer"],
+    "autoload": {
+        "psr-4": {
+            "Autoframe\\Components\\Database\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Unit\\": "Tests/Unit"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6 || ^10"
+    }
+
+}
