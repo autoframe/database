@@ -5,8 +5,8 @@
     "license": "MIT",
     "homepage": "https://github.com/autoframe",
     "require": {
-        "php": ">7.4",
-        "autoframe/components-exception": ">2.0"
+        "php": ">=7.4",
+        "autoframe/components-exception": ">=2.0"
     },
     "version": "1.0.0",
     "authors": [
@@ -19,7 +19,7 @@
     "keywords": ["PDO", "Database", "Entity", "Database Layer"],
     "autoload": {
         "psr-4": {
-            "Autoframe\\Components\\Database\\": "src/"
+            "Autoframe\\Database\\": "src/"
         }
     },
     "autoload-dev": {
