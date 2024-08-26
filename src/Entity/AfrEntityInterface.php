@@ -2,7 +2,7 @@
 
 namespace Autoframe\Database\Entity;
 
-use AfrEntityException
+use Autoframe\Database\Entity\Exception\AfrEntityException;
 
 interface AfrEntityInterface
 {

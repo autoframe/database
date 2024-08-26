@@ -6,7 +6,12 @@
     "homepage": "https://github.com/autoframe",
     "require": {
         "php": ">=7.4",
-        "autoframe/components-exception": ">=2.0"
+        "autoframe/components-exception": ">=2.0",
+        "autoframe/design-patterns": "^1.0",
+        "ext-pdo": "*",
+        "doctrine/orm": "*",
+        "autoframe/cli-tools": "^1.0",
+        "ext-json": "*"
     },
     "version": "1.0.0",
     "authors": [
@@ -16,10 +21,18 @@
             "role": "Developer"
         }
     ],
-    "keywords": ["PDO", "Database", "Entity", "Database Layer"],
+    "keywords": [
+        "PDO",
+        "ORM",
+        "QUERY",
+        "Database",
+        "Entity",
+        "Database Layer"
+    ],
     "autoload": {
         "psr-4": {
-            "Autoframe\\Database\\": "src/"
+            "Autoframe\\Database\\": "src/",
+            "Autoframe\\DataLayer\\": "src/DataLayer/"
         }
     },
     "autoload-dev": {
