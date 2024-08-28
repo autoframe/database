@@ -3,11 +3,11 @@
 namespace Autoframe\Database\Orm\Action\Mysql;
 
 use Autoframe\Database\Connection\Exception\AfrDatabaseConnectionException;
-use Autoframe\Database\Orm\Action\DbActionInterface;
+use Autoframe\Database\Orm\Action\CnxActionInterface;
 use Autoframe\Database\Orm\Action\AfrPdoAliasSingletonTrait;
 use PDO;
 
-class DbAction implements DbActionInterface
+class CnxAction implements CnxActionInterface
 {
     use PdoInteractTrait;
     use Encapsulate;
@@ -31,17 +31,25 @@ class DbAction implements DbActionInterface
     }
 
     /**
+     * The response array should contain the keys: self::DB_NAME, self::CHARSET, self::COLLATION
      * @param string $sDbNameLike
      * @return array
      * @throws AfrDatabaseConnectionException
      */
-    public function dbListAllWithProperties(string $sDbNameLike = ''): array
+    public function CnxListAllDatabasesWithProperties(string $sDbNameLike = ''): array
     {
         $this->trimDbName($sDbNameLike,false);
-        return $this->getAllRows(
+
+        $aRows = $this->getAllRows(
             'SELECT * FROM `information_schema`.`SCHEMATA`' . (
             strlen($sDbNameLike) ? ' WHERE `SCHEMA_NAME` LIKE ' . self::encapsulateCellValue($sDbNameLike) : ''
             ), 'SCHEMA_NAME');
+        foreach ($aRows as &$aRow) {
+            $aRow[self::DB_NAME] = $aRow['SCHEMA_NAME'];
+            $aRow[self::CHARSET] = $aRow['DEFAULT_CHARACTER_SET_NAME'] ?? 'utf8';
+            $aRow[self::COLLATION] = $aRow['DEFAULT_COLLATION_NAME'] ?? $aRow[self::CHARSET].'_general_ci';
+        }
+        return $aRows;
     }
 
     /**
@@ -63,7 +71,7 @@ class DbAction implements DbActionInterface
     public function dbGetDefaultCharsetAndCollation(string $sDbName): array
     {
         $this->trimDbName($sDbName,true);
-        $aList = $this->dbListAllWithProperties($sDbName);
+        $aList = $this->CnxListAllDatabasesWithProperties($sDbName);
         return [
             static::DB_NAME => isset($aList[$sDbName]) ? $sDbName : null,
             static::CHARSET => $aList[$sDbName]['DEFAULT_CHARACTER_SET_NAME'] ?? null,
@@ -91,7 +99,7 @@ class DbAction implements DbActionInterface
     {
         $this->trimDbName($sDbName,true);
 
-        $aUtf = $this->dbListCollation('utf8%general_ci',false);
+        $aUtf = $this->CnxGetCollationCharsetList('utf8%general_ci',false);
         $sCharset = $aUtf['utf8mb4_general_ci'] ?? ($aUtf['utf8_general_ci'] ?? 'utf8');
         $sCollate = $sCharset.'_general_ci';
         return $this->dbCreateUsingCharset($sDbName, $sCharset, $sCollate, $aOptions, $bIfNotExists);
@@ -120,15 +128,15 @@ class DbAction implements DbActionInterface
      */
     public function dbCreateUsingCharset(
         string $sDbName,
-        string $sCharset = 'utf8',
-        string $sCollate = 'utf8_general_ci',
+        string $sCharset = 'utf8mb4',
+        string $sCollate = 'utf8mb4_general_ci',
         array $aOptions = [],
         bool $bIfNotExists = false
     ): bool
     {
         $this->trimDbName($sDbName,true);
 
-        $aCollationList = $this->dbListCollation($sCharset,true);
+        $aCollationList = $this->CnxGetCollationCharsetList($sCharset,true);
         if(!isset($aCollationList[$sCollate])){
             $aCollationListMatchingCharset = array_keys($aCollationList, $sCharset);
             foreach ($aCollationListMatchingCharset as $sCollateX) {
@@ -148,21 +156,40 @@ class DbAction implements DbActionInterface
         //CREATE DATABASE IF NOT EXISTS `admin_new` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
         //CREATE DATABASE `EmailRejection` /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci */
 
+        $sComment = $aOptions['comment'] ?? ($aOptions['COMMENT'] ?? null); //todo:test
+        if ($sComment !== null) {
+            $sSvVersion = self::getCell('SELECT VERSION()');
+            $aSvVersion=explode('.',explode('-',$sSvVersion)[0]);
+            $iMajor = (int)$aSvVersion[0];
+            $iMinor = !empty($aSvVersion[1]) ? (int)$aSvVersion[1] : 0;
+            if( stripos($sSvVersion,'MariaDB') &&  ($iMajor===10 && $iMinor>=5 || $iMajor>10) ){
+                $sComment = ' COMMENT ' . self::encapsulateCellValue($sComment); // >= MariaDb 10.5.0
+                // information_schema.schemata SCHEMA_COMMENT
+            }
+            else{
+                $sComment = '';
+            }
+
+        }
+
         if($this->dbExists($sDbName)){
             $sSql = 'ALTER DATABASE ';
             $sSql.= self::encapsulateDbTblColName($sDbName);
             $sSql.= " CHARACTER SET $sCharset COLLATE $sCollate ";
+            $sSql.= $sComment;
         }
         else{
             $sSql = 'CREATE DATABASE '.($bIfNotExists ? 'IF NOT EXISTS ' : '');
             $sSql.= self::encapsulateDbTblColName($sDbName);
-            $sSql.= " /*!40100 DEFAULT CHARACTER SET $sCharset COLLATE $sCollate */ ";
+            $sSql.= " /*!40100 DEFAULT CHARACTER SET $sCharset COLLATE $sCollate $sComment */ ";
         }
         //ALTER DATABASE databasename CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
         //ALTER TABLE tablename CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
         //Or if you're still on MySQL 5.5.2 or older which didn't support 4-byte UTF-8, use utf8 instead of utf8mb4:
         //ALTER DATABASE databasename CHARACTER SET utf8 COLLATE utf8_unicode_ci;
         //ALTER TABLE tablename CONVERT TO CHARACTER SET utf8 COLLATE utf8_unicode_ci;
+
+
 
         return (bool)$this->execPdoStatement($sSql);
 
@@ -178,7 +205,7 @@ class DbAction implements DbActionInterface
      * @return array
      * @throws AfrDatabaseConnectionException
      */
-    public function dbListCollation(string $sLike = '', bool $bWildcard = null): array
+    public function CnxGetCollationCharsetList(string $sLike = '', bool $bWildcard = null): array
     {
         $sSqlLike = '';
         if(strlen($sLike)){
@@ -209,4 +236,69 @@ class DbAction implements DbActionInterface
         }
     }
 
+    /**
+     * Retrieves all available character sets from the database.
+     *
+     * @return array An array of character set names.
+     * @throws AfrDatabaseConnectionException If there is an error connecting to the database.
+     */
+    public function pdoGetAllCharsets(): array
+    {
+        return $this->getRowsValue(
+            'SELECT CHARACTER_SET_NAME FROM `information_schema`.`CHARACTER_SETS` ORDER BY `CHARACTER_SET_NAME` DESC'
+        );
+    }
+
+    /**
+     * Retrieves all the collations from the database.
+     *
+     * @return array An array containing all the collations.
+     * @throws AfrDatabaseConnectionException If there is an issue with the database connection.
+     */
+    public function pdoGetAllCollations(): array
+    {
+        return $this->getRowsValue(
+            'SELECT * FROM `information_schema`.`CHARACTER_SETS` ORDER BY `CHARACTER_SETS`.`CHARACTER_SET_NAME` DESC'
+        );    }
+
+    /**
+     * @throws AfrDatabaseConnectionException
+     */
+    public function cnxSetDefaultCharsetAndCollation(
+        string $sCharset='utf8mb4',
+        string $sCollation = 'utf8mb4_0900_ai_ci',
+        bool $character_set_server = true,
+        bool $character_set_database = false
+    ): bool
+    {
+/*
+OLD: SET character_set_results = 'utf8', character_set_client = 'utf8', character_set_connection = 'utf8', character_set_database = 'utf8', character_set_server = 'utf8'
+show variables like 'character_set%';
+SHOW VARIABLES LIKE 'collation_%';
++--------------------------+-------------------------------------+
+| Variable_name            | Value                               |
++--------------------------+-------------------------------------+
+| character_set_client     | utf8mb4                             |
+| character_set_connection | utf8mb4                             |
+| character_set_results    | utf8mb4                             |
+| character_set_database   | utf8mb4                             | # this is not permitted on Cpanel  (8.0.39 - MySQL Community Server - GPL) #1227 - Access denied; you need (at least one of) the SUPER, SYSTEM_VARIABLES_ADMIN or SESSION_VARIABLES_ADMIN privilege(s) for this operation
+| character_set_server     | utf8mb4                             |
+| character_set_system     | utf8mb3                             |
+| character_set_filesystem | binary                              |
+| character_sets_dir       | /usr/share/percona-server/charsets/ |
++--------------------------+-------------------------------------+
+*/
+
+        $aResults = [
+            $this->execPdoStatement("SET NAMES $sCharset" . ($sCollation ? " COLLATE $sCollation" : '')) ? 1 : 0
+        ];
+        if($character_set_server){
+            $aResults[] = $this->execPdoStatement("SET character_set_server = $sCharset;") ? 1 : 0;
+        }
+        if($character_set_database){
+            $aResults[] = $this->execPdoStatement("SET character_set_database = $sCharset;") ? 1 : 0;
+        }
+        return array_sum($aResults)===count($aResults);
+
+    }
 }

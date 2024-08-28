@@ -19,6 +19,7 @@ interface AfrDbConnectionManagerInterface
     const HOST = 'host';
     const PORT = 'port';
     const DBNAME = 'dbname';
+    const CHARSET = 'sCharset';
 
     const DRIVERS_PORTS = [
         'cubrid' => 8001,

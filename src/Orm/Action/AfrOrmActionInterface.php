@@ -13,7 +13,10 @@ interface AfrOrmActionInterface
 
     public static function pdoGetAllCharsets(): array; //SHOW CHARACTER SET;     //SELECT * FROM `information_schema`.`CHARACTER_SETS` ORDER BY `CHARACTER_SETS`.`CHARACTER_SET_NAME` DESC;
     public static function pdoGetAllCollations(): array; //SHOW COLLATION     //SELECT * FROM `information_schema`.`CHARACTER_SETS` ORDER BY `CHARACTER_SETS`.`CHARACTER_SET_NAME` DESC;
-    public static function pdoSetDefaultCharsetAndCollation(string $sCharset, string $sCollation = ''): bool; //SHOW CHARACTER SET;
+    public static function cnxSetDefaultCharsetAndCollation(string $sCharset='utf8mb4',
+                                                            string $sCollation = 'utf8mb4_0900_ai_ci',
+                                                            bool $character_set_server = true,
+                                                            bool $character_set_database = false): bool; //SHOW CHARACTER SET;
 
 
 
@@ -29,7 +32,7 @@ interface AfrOrmActionInterface
 
     /** Poate fac aici o singura metoda cu cheia sa fie numele db-ului la returen */
     public static function dbListAll(string $sDbNameLike = ''): array;
-    public static function dbListAllWithProperties(string $sDbNameLike = ''): array;
+    public static function CnxListAllDatabasesWithProperties(string $sDbNameLike = ''): array;
 
 
     public static function dbExists(string $sDbName): bool;
@@ -44,8 +47,8 @@ interface AfrOrmActionInterface
     // CREATE DATABASE `testswmb4` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_swedish_ci */
     public static function dbCreateUsingCharset(
         string $sDbName,
-        string $sCharset = 'utf8',
-        string $sCollate = 'utf8_general_ci',
+        string $sCharset = 'utf8mb4',
+        string $sCollate = 'utf8mb4_general_ci',
         array  $aOptions = [],
         bool $bIfNotExists = false
     ): bool;

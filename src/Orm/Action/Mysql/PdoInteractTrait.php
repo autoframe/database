@@ -34,8 +34,7 @@ trait PdoInteractTrait
     public function getRowsValue(string $sQuery): array
     {
         $aList = [];
-        $pdo = $this->getPdo();
-        foreach ($pdo->query($sQuery)->fetchAll(PDO::FETCH_NUM) as $mRow) {
+        foreach ($this->getPdo()->query($sQuery)->fetchAll(PDO::FETCH_NUM) as $mRow) {
             $mRow = is_object($mRow) ? get_object_vars($mRow) : (array)$mRow;
             $aList[] = array_pop($mRow);
         }
@@ -44,10 +43,10 @@ trait PdoInteractTrait
 
     /**
      * @param string $sQuery
-     * @return array
+     * @return string|int|float|null
      * @throws AfrDatabaseConnectionException
      */
-    public function getCell(string $sQuery): array
+    public function getCell(string $sQuery): ?string
     {
         $aRow = $this->getRow($sQuery);
         return array_pop($aRow);
@@ -77,15 +76,13 @@ trait PdoInteractTrait
     /** Many query
      *
      * @param string $sQuery
-     * @param int $iLimit
      * @return array
      * @throws AfrDatabaseConnectionException
      */
-    public function getRow(string $sQuery, int $iLimit = 1): array
+    public function getRow(string $sQuery): array
     {
         if (
-            $iLimit &&
-            strpos(strtoupper(substr($sQuery, -20, 20)), 'LIMIT') === false
+            strpos(strtoupper(substr($sQuery, -20, 20)), ' LIMIT') === false
         ) {
             $sQuery .= ' LIMIT 1';
         }

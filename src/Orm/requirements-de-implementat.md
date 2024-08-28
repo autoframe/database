@@ -1,5 +1,7 @@
 # trebuie sa:
     
+## sa rescriu il loc de with static sa fie pe instante
+
     - pot sa citesc bazele de date de pe serverul live, adica din alias
     - pot sa citesc views ca si readonly
     - o sa tin o structua de array ca si storage model

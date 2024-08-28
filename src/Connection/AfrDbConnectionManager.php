@@ -25,10 +25,10 @@ class AfrDbConnectionManager extends AfrSingletonAbstractClass implements AfrDbC
         }
         if(
             $this->sDataLayerNamespace == 'Autoframe\\DataLayer\\' &&
-            !empty($_ENV['DATALAYERNAMESPACE']) &&
-            $this->sDataLayerNamespace != $_ENV['DATALAYERNAMESPACE']
+            !empty($_ENV['AFRDATALAYERNAMESPACE']) &&
+            $this->sDataLayerNamespace != $_ENV['AFRDATALAYERNAMESPACE']
         ){
-            return $this->sDataLayerNamespace = $_ENV['DATALAYERNAMESPACE'];
+            return $this->sDataLayerNamespace = $_ENV['AFRDATALAYERNAMESPACE'];
         }
 
         return $this->sDataLayerNamespace;
@@ -204,8 +204,8 @@ class AfrDbConnectionManager extends AfrSingletonAbstractClass implements AfrDbC
         if (empty($this->aAliases[$sAlias])) {
             throw new AfrDatabaseConnectionException('Database Alias is undefined for Closure!');
         }
-        $oClosure->bindTo($this, $this);
-        $this->aAliases[$sAlias][static::CLOSURE] = $oClosure;
+
+        $this->aAliases[$sAlias][static::CLOSURE] = $oClosure->bindTo($this, $this);
         return $this;
     }
 
@@ -329,6 +329,11 @@ class AfrDbConnectionManager extends AfrSingletonAbstractClass implements AfrDbC
         foreach ($aRawParts as $sKey => $sVal) {
             $aParts[strtolower(trim($sKey))] = trim($sVal);
         }
+        if ($sDriver === 'mysql' && empty($aParts[static::CHARSET])){
+            $aParts[static::CHARSET] = 'utf8mb4';
+            $aParts[static::DSN] .= ';charset=utf8mb4';
+        }
+
         if (empty($aParts[static::HOST])) {
             if ($sDriver === 'sqlite') {
                 $aParts[static::HOST] = trim(explode(';', $sDSNSettings)[0]);
@@ -457,7 +462,7 @@ class AfrDbConnectionManager extends AfrSingletonAbstractClass implements AfrDbC
   $pdo = new PDO("ibm:DRIVER={IBM DB2 ODBC DRIVER};DATABASE=testdb;HOSTNAME=11.22.33.444;PORT=56789;PROTOCOL=TCPIP;", $user, $pass);#  PDO_IBM DSN
 
   $pdo = new PDO("informix:host=host.domain.com; service=9800; database=common_db; server=ids_server; protocol=onsoctcp; EnableScrollableCursors=1", "testuser", "tespass"); #PDO_INFORMIX
-  $pdo = new PDO("mysql:host=$host;port=3307;dbname=$dbname", $user, $pass);# MySQL with PDO_MYSQL
+  $pdo = new PDO("mysql:host=$host;port=3307;dbname=$dbname;charset=utf8mb4", $user, $pass);# MySQL with PDO_MYSQL
   $pdo = new PDO("mysql:unix_socket=/tmp/mysql.sock;dbname=testdb", $user, $pass);# MySQL with PDO_MYSQL
 
   $pdo = new PDO("oci:dbname=192.168.10.145:1521/mydb;charset=CL8MSWIN1251", "testuser", "tespass"); #Oracle Instant Client PDO_OCI

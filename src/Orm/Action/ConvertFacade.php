@@ -7,9 +7,9 @@ use Autoframe\Database\Orm\Exception\AfrOrmException;
 
 class ConvertFacade implements ConvertInterface
 {
-    use With;
-    protected static string $sDialectClass;
-    protected static string $sAlias;
+    use WithForFacade;
+ //   protected static string $sDialectClass;
+ //   protected static string $sAlias;
 
     /**
      * @throws AfrOrmException

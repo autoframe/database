@@ -7,7 +7,7 @@ use Autoframe\Database\Connection\AfrDbConnectionManager;
 use Autoframe\Database\Orm\Action\Mysql\Convert;
 use Autoframe\Database\Orm\Action\ConvertFacade as ConvertSwitch;
 use PHPUnit\Framework\TestCase;
-use Autoframe\Database\Orm\Action\DbActionFacade;
+use Autoframe\Database\Orm\Action\CnxActionFacade;
 
 class AfrOrmHelperTest extends TestCase
 {
@@ -229,27 +229,29 @@ class AfrOrmHelperTest extends TestCase
     /**
      * @test
      */
-    public function DbActionFacadeTest(): void
+    public function CnxActionFacadeTest(): void
     {
         $aResults = [];
         AfrDbConnectionManager::getInstance()->defineConnectionAlias(
             'test',
-            "mysql:host=192.168.0.21;charset=utf8",
+            "mysql:host=192.168.0.21",
+            //"mysql:host=192.168.0.21;charset=utf8mb4",
             "git",
             "1234"
         );
-        $oAfrDatabase = DbActionFacade::withConnAlias('test');
+        $oAfrDatabase = CnxActionFacade::withConnAlias('test');
 //        $aResults['dbListAll'] = $oAfrDatabase->dbListAll();
 //        $aResults['dbListAll-%dmin%'] = $oAfrDatabase->dbListAll('%dmin%');
-        $aResults['dbListAllWithProperties'] = $oAfrDatabase->dbListAllWithProperties();
+        $aResults['CnxListAllDatabasesWithProperties'] = $oAfrDatabase->CnxListAllDatabasesWithProperties();
 //        $aResults['dbExists-dms'] = $oAfrDatabase->dbExists('dms');
 //        $aResults['dbExists-dmsX'] = $oAfrDatabase->dbExists('dmsX');
         $aResults['dbGetDefaultCharsetAndCollation-admin_new'] = $oAfrDatabase->dbGetDefaultCharsetAndCollation('admin_new');
+        $aResults['charsetsX'] = AfrDbConnectionManager::getInstance()->getAliasInfo('test');
 //        $aResults['dbSetDefaultCharsetAndCollation-admin_new'] = $oAfrDatabase->dbSetDefaultCharsetAndCollation('admin_new','utf8mb4');
 //        $aResults['dbCreateUsingDefaultCharset'] = $oAfrDatabase->dbCreateUsingDefaultCharset('dbCreateUsingDefaultCharset'.time());
 //        $aResults['dbCreateUsingCharset'] = $oAfrDatabase->dbCreateUsingCharset('dbCreateUsingCharset'.time());
-//        $aResults['dbListCollation'] = $oAfrDatabase->dbListCollation();
-//        $aResults['dbListCollation-utf8%general_ci'] = $oAfrDatabase->dbListCollation('utf8%general_ci',false);
+//        $aResults['CnxGetCollationCharsetList'] = $oAfrDatabase->CnxGetCollationCharsetList();
+//        $aResults['CnxGetCollationCharsetList-utf8%general_ci'] = $oAfrDatabase->CnxGetCollationCharsetList('utf8%general_ci',false);
 
 
         $this->assertSame('x', 'y', print_r($aResults, true));

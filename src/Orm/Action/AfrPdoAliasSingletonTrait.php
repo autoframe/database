@@ -55,7 +55,7 @@ trait AfrPdoAliasSingletonTrait
     final public static function withConnAlias(string $sConnAlias): self
     {
         if (empty($sConnAlias)) {
-            throw new AfrException("Alias can't be empty");
+            throw new AfrException('Alias can\'t be empty');
         }
         if (empty(self::$instances[static::class][$sConnAlias])) {
             return self::$instances[static::class][$sConnAlias] = new static($sConnAlias);
