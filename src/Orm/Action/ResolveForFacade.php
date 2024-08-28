@@ -5,14 +5,14 @@ namespace Autoframe\Database\Orm\Action;
 use Autoframe\Database\Connection\AfrDbConnectionManager;
 use Autoframe\Database\Connection\Exception\AfrDatabaseConnectionException;
 
-trait WithForFacade
+trait ResolveForFacade
 {
     /**
      * @param string $sDialect Types: mysql, sqlite, pgsql, mssql, cubrid, sybase, dblib, firebird, ibm, informix, oci, odbc
      * @param string $sDialectClass The fully qualified class name for the database dialect.
      * @return string FQCN
      */
-    public static function withDialect(string $sDialect, string $sDialectClass = ''): string
+    protected static function resolveDialect(string $sDialect, string $sDialectClass = ''): string
     {
         if (empty($sDialectClass)) {
             $iSplit = (int)strrpos(static::class, '\\');
@@ -34,9 +34,9 @@ trait WithForFacade
      * @return string The fully qualified class name for the database dialect.
      * @throws AfrDatabaseConnectionException
      */
-    public static function withConnAlias(string $sAlias, string $sDialectClass = ''): string
+    protected static function resolveAlias(string $sAlias, string $sDialectClass = ''): string
     {
-        return static::withDialect(
+        return static::resolveDialect(
             AfrDbConnectionManager::getInstance()->driverType($sAlias),
             $sDialectClass
         );
