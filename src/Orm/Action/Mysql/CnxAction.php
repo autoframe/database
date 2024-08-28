@@ -5,7 +5,6 @@ namespace Autoframe\Database\Orm\Action\Mysql;
 use Autoframe\Database\Connection\Exception\AfrDatabaseConnectionException;
 use Autoframe\Database\Orm\Action\CnxActionInterface;
 use Autoframe\Database\Orm\Action\AfrPdoAliasSingletonTrait;
-use PDO;
 
 class CnxAction implements CnxActionInterface
 {
@@ -22,7 +21,7 @@ class CnxAction implements CnxActionInterface
      */
     public function dbListAll(string $sDbNameLike = ''): array
     {
-        $this->trimDbName($sDbNameLike,false);
+        $this->trimDbName($sDbNameLike, false);
         return $this->getRowsValue(
             'SHOW DATABASES' . (
             strlen($sDbNameLike) ? ' LIKE ' . self::encapsulateCellValue($sDbNameLike) : ''
@@ -38,7 +37,7 @@ class CnxAction implements CnxActionInterface
      */
     public function CnxListAllDatabasesWithProperties(string $sDbNameLike = ''): array
     {
-        $this->trimDbName($sDbNameLike,false);
+        $this->trimDbName($sDbNameLike, false);
 
         $aRows = $this->getAllRows(
             'SELECT * FROM `information_schema`.`SCHEMATA`' . (
@@ -47,7 +46,7 @@ class CnxAction implements CnxActionInterface
         foreach ($aRows as &$aRow) {
             $aRow[self::DB_NAME] = $aRow['SCHEMA_NAME'];
             $aRow[self::CHARSET] = $aRow['DEFAULT_CHARACTER_SET_NAME'] ?? 'utf8';
-            $aRow[self::COLLATION] = $aRow['DEFAULT_COLLATION_NAME'] ?? $aRow[self::CHARSET].'_general_ci';
+            $aRow[self::COLLATION] = $aRow['DEFAULT_COLLATION_NAME'] ?? $aRow[self::CHARSET] . '_general_ci';
         }
         return $aRows;
     }
@@ -59,8 +58,8 @@ class CnxAction implements CnxActionInterface
      */
     public function dbExists(string $sDbName): bool
     {
-        $this->trimDbName($sDbName,true);
-        return in_array($sDbName,$this->dbListAll($sDbName));
+        $this->trimDbName($sDbName, true);
+        return in_array($sDbName, $this->dbListAll($sDbName));
     }
 
     /**
@@ -70,7 +69,7 @@ class CnxAction implements CnxActionInterface
      */
     public function dbGetDefaultCharsetAndCollation(string $sDbName): array
     {
-        $this->trimDbName($sDbName,true);
+        $this->trimDbName($sDbName, true);
         $aList = $this->CnxListAllDatabasesWithProperties($sDbName);
         return [
             static::DB_NAME => isset($aList[$sDbName]) ? $sDbName : null,
@@ -88,7 +87,7 @@ class CnxAction implements CnxActionInterface
      */
     public function dbSetDefaultCharsetAndCollation(string $sDbName, string $sCharset, string $sCollation = ''): bool
     {
-        $this->trimDbName($sDbName,true);
+        $this->trimDbName($sDbName, true);
         return $this->dbCreateUsingCharset($sDbName, $sCharset, $sCollation, [], true);
     }
 
@@ -97,11 +96,11 @@ class CnxAction implements CnxActionInterface
      */
     public function dbCreateUsingDefaultCharset(string $sDbName, array $aOptions = [], bool $bIfNotExists = false): bool
     {
-        $this->trimDbName($sDbName,true);
+        $this->trimDbName($sDbName, true);
 
-        $aUtf = $this->CnxGetCollationCharsetList('utf8%general_ci',false);
+        $aUtf = $this->CnxGetCollationCharsetList('utf8%general_ci', false);
         $sCharset = $aUtf['utf8mb4_general_ci'] ?? ($aUtf['utf8_general_ci'] ?? 'utf8');
-        $sCollate = $sCharset.'_general_ci';
+        $sCollate = $sCharset . '_general_ci';
         return $this->dbCreateUsingCharset($sDbName, $sCharset, $sCollate, $aOptions, $bIfNotExists);
     }
 
@@ -130,23 +129,23 @@ class CnxAction implements CnxActionInterface
         string $sDbName,
         string $sCharset = 'utf8mb4',
         string $sCollate = 'utf8mb4_general_ci',
-        array $aOptions = [],
-        bool $bIfNotExists = false
+        array  $aOptions = [],
+        bool   $bIfNotExists = false
     ): bool
     {
-        $this->trimDbName($sDbName,true);
+        $this->trimDbName($sDbName, true);
 
-        $aCollationList = $this->CnxGetCollationCharsetList($sCharset,true);
-        if(!isset($aCollationList[$sCollate])){
+        $aCollationList = $this->CnxGetCollationCharsetList($sCharset, true);
+        if (!isset($aCollationList[$sCollate])) {
             $aCollationListMatchingCharset = array_keys($aCollationList, $sCharset);
             foreach ($aCollationListMatchingCharset as $sCollateX) {
-                if(strpos($sCollateX,'_general_ci') !== false){
+                if (strpos($sCollateX, '_general_ci') !== false) {
                     $sCollate = $sCollateX;
                     $sCharset = $aCollationList[$sCollate];
                     break;
                 }
             }
-            if(!isset($aCollationList[$sCollate])){ //fallback
+            if (!isset($aCollationList[$sCollate])) { //fallback
                 $sCharset = 'utf8';
                 $sCollate = 'utf8_general_ci';
             }
@@ -159,29 +158,27 @@ class CnxAction implements CnxActionInterface
         $sComment = $aOptions['comment'] ?? ($aOptions['COMMENT'] ?? null); //todo:test
         if ($sComment !== null) {
             $sSvVersion = self::getCell('SELECT VERSION()');
-            $aSvVersion=explode('.',explode('-',$sSvVersion)[0]);
+            $aSvVersion = explode('.', explode('-', $sSvVersion)[0]);
             $iMajor = (int)$aSvVersion[0];
             $iMinor = !empty($aSvVersion[1]) ? (int)$aSvVersion[1] : 0;
-            if( stripos($sSvVersion,'MariaDB') &&  ($iMajor===10 && $iMinor>=5 || $iMajor>10) ){
+            if (stripos($sSvVersion, 'MariaDB') && ($iMajor === 10 && $iMinor >= 5 || $iMajor > 10)) {
                 $sComment = ' COMMENT ' . self::encapsulateCellValue($sComment); // >= MariaDb 10.5.0
                 // information_schema.schemata SCHEMA_COMMENT
-            }
-            else{
+            } else {
                 $sComment = '';
             }
 
         }
 
-        if($this->dbExists($sDbName)){
+        if ($this->dbExists($sDbName)) {
             $sSql = 'ALTER DATABASE ';
-            $sSql.= self::encapsulateDbTblColName($sDbName);
-            $sSql.= " CHARACTER SET $sCharset COLLATE $sCollate ";
-            $sSql.= $sComment;
-        }
-        else{
-            $sSql = 'CREATE DATABASE '.($bIfNotExists ? 'IF NOT EXISTS ' : '');
-            $sSql.= self::encapsulateDbTblColName($sDbName);
-            $sSql.= " /*!40100 DEFAULT CHARACTER SET $sCharset COLLATE $sCollate $sComment */ ";
+            $sSql .= self::encapsulateDbTblColName($sDbName);
+            $sSql .= " CHARACTER SET $sCharset COLLATE $sCollate ";
+            $sSql .= $sComment;
+        } else {
+            $sSql = 'CREATE DATABASE ' . ($bIfNotExists ? 'IF NOT EXISTS ' : '');
+            $sSql .= self::encapsulateDbTblColName($sDbName);
+            $sSql .= " /*!40100 DEFAULT CHARACTER SET $sCharset COLLATE $sCollate $sComment */ ";
         }
         //ALTER DATABASE databasename CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
         //ALTER TABLE tablename CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -190,14 +187,13 @@ class CnxAction implements CnxActionInterface
         //ALTER TABLE tablename CONVERT TO CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 
 
-
         return (bool)$this->execPdoStatement($sSql);
 
     }
 
     //https://stackoverflow.com/questions/67093/how-do-i-rename-a-mysql-database-change-schema-name
     //SELECT CONCAT('RENAME TABLE admin_new.', table_name, ' TO NNNEEEWWWW.', table_name, '; ') FROM information_schema.TABLES WHERE table_schema='admin_new';
-   // public function dbRename(string $sDbFrom, string $sDbTo): bool { }
+    // public function dbRename(string $sDbFrom, string $sDbTo): bool { }
 
     /**
      * @param string $sLike
@@ -208,17 +204,17 @@ class CnxAction implements CnxActionInterface
     public function CnxGetCollationCharsetList(string $sLike = '', bool $bWildcard = null): array
     {
         $sSqlLike = '';
-        if(strlen($sLike)){
-            if($bWildcard === null && strpos($sLike, '_') === false){
+        if (strlen($sLike)) {
+            if ($bWildcard === null && strpos($sLike, '_') === false) {
                 $bWildcard = true;
             }
-            $sLike = $bWildcard ? '%'.$sLike.'%' : $sLike;
+            $sLike = $bWildcard ? '%' . $sLike . '%' : $sLike;
             $sSqlLike = ' WHERE `COLLATION_NAME` LIKE ' . self::encapsulateCellValue($sLike);
         }
         $aResults = [];
         foreach ($this->getAllRows(
-            'SELECT * FROM `information_schema`.`COLLATIONS` '.$sSqlLike.' ORDER BY CHARACTER_SET_NAME,COLLATION_NAME LIMIT 1000')
-        as $row){
+            'SELECT * FROM `information_schema`.`COLLATIONS` ' . $sSqlLike . ' ORDER BY CHARACTER_SET_NAME,COLLATION_NAME LIMIT 1000')
+                 as $row) {
             $aResults[$row['COLLATION_NAME']] = $row['CHARACTER_SET_NAME'];
         }
         return $aResults;
@@ -259,46 +255,56 @@ class CnxAction implements CnxActionInterface
     {
         return $this->getRowsValue(
             'SELECT * FROM `information_schema`.`CHARACTER_SETS` ORDER BY `CHARACTER_SETS`.`CHARACTER_SET_NAME` DESC'
-        );    }
+        );
+    }
 
     /**
      * @throws AfrDatabaseConnectionException
      */
     public function cnxSetDefaultCharsetAndCollation(
-        string $sCharset='utf8mb4',
+        string $sCharset = 'utf8mb4',
         string $sCollation = 'utf8mb4_0900_ai_ci',
-        bool $character_set_server = true,
-        bool $character_set_database = false
+        bool   $character_set_server = true,
+        bool   $character_set_database = false
     ): bool
     {
-/*
-OLD: SET character_set_results = 'utf8', character_set_client = 'utf8', character_set_connection = 'utf8', character_set_database = 'utf8', character_set_server = 'utf8'
-show variables like 'character_set%';
-SHOW VARIABLES LIKE 'collation_%';
-+--------------------------+-------------------------------------+
-| Variable_name            | Value                               |
-+--------------------------+-------------------------------------+
-| character_set_client     | utf8mb4                             |
-| character_set_connection | utf8mb4                             |
-| character_set_results    | utf8mb4                             |
-| character_set_database   | utf8mb4                             | # this is not permitted on Cpanel  (8.0.39 - MySQL Community Server - GPL) #1227 - Access denied; you need (at least one of) the SUPER, SYSTEM_VARIABLES_ADMIN or SESSION_VARIABLES_ADMIN privilege(s) for this operation
-| character_set_server     | utf8mb4                             |
-| character_set_system     | utf8mb3                             |
-| character_set_filesystem | binary                              |
-| character_sets_dir       | /usr/share/percona-server/charsets/ |
-+--------------------------+-------------------------------------+
-*/
+        /*
+        OLD: SET character_set_results = 'utf8', character_set_client = 'utf8', character_set_connection = 'utf8', character_set_database = 'utf8', character_set_server = 'utf8'
+        show variables like 'character_set%';
+        SHOW VARIABLES LIKE 'collation_%';
+        +--------------------------+-------------------------------------+
+        | Variable_name            | Value                               |
+        +--------------------------+-------------------------------------+
+        | character_set_client     | utf8mb4                             |
+        | character_set_connection | utf8mb4                             |
+        | character_set_results    | utf8mb4                             |
+        | character_set_database   | utf8mb4                             | # this is not permitted on Cpanel  (8.0.39 - MySQL Community Server - GPL) #1227 - Access denied; you need (at least one of) the SUPER, SYSTEM_VARIABLES_ADMIN or SESSION_VARIABLES_ADMIN privilege(s) for this operation
+        | character_set_server     | utf8mb4                             |
+        | character_set_system     | utf8mb3                             |
+        | character_set_filesystem | binary                              |
+        | character_sets_dir       | /usr/share/percona-server/charsets/ |
+        +--------------------------+-------------------------------------+
+        */
 
         $aResults = [
             $this->execPdoStatement("SET NAMES $sCharset" . ($sCollation ? " COLLATE $sCollation" : '')) ? 1 : 0
         ];
-        if($character_set_server){
+        if ($character_set_server) {
             $aResults[] = $this->execPdoStatement("SET character_set_server = $sCharset;") ? 1 : 0;
         }
-        if($character_set_database){
+        if ($character_set_database) {
             $aResults[] = $this->execPdoStatement("SET character_set_database = $sCharset;") ? 1 : 0;
         }
-        return array_sum($aResults)===count($aResults);
+        return array_sum($aResults) === count($aResults);
 
+    }
+
+    /**
+     * @throws AfrDatabaseConnectionException
+     */
+    public function showCreateDb(string $sDbName): string
+    {
+        $aRow = $this->getRow('SHOW CREATE DATABASE ' . self::encapsulateDbTblColName($sDbName));
+        return $aRow['Create Database'] ?? end($aRow);
     }
 }

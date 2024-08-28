@@ -2,7 +2,7 @@
 
 namespace Autoframe\Database\Orm\Action;
 
-use Autoframe\Components\Exception\AfrException;
+use \Autoframe\Database\Connection\Exception\AfrDatabaseConnectionException;
 
 trait AfrPdoAliasSingletonTrait
 {
@@ -31,31 +31,31 @@ trait AfrPdoAliasSingletonTrait
 
     /**
      * Cloning and un-serialization are not permitted for singletons.
-     * @throws AfrException
+     * @throws AfrDatabaseConnectionException
      */
     final public function __clone()
     {
-        throw new AfrException('Cannot clone a singleton: ' . static::class);
+        throw new AfrDatabaseConnectionException('Cannot clone a singleton: ' . static::class);
     }
 
     /**
-     * @throws AfrException
+     * @throws AfrDatabaseConnectionException
      */
     final public function __wakeup()
     {
-        throw new AfrException('Cannot unserialize singleton: ' . static::class);
+        throw new AfrDatabaseConnectionException('Cannot unserialize singleton: ' . static::class);
     }
 
 
     /**
      * The method you use to get the Singleton's instance.
      * @return self
-     * @throws AfrException
+     * @throws AfrDatabaseConnectionException
      */
-    final public static function withConnAlias(string $sConnAlias): self
+    final public static function makeFromConnAlias(string $sConnAlias): self
     {
         if (empty($sConnAlias)) {
-            throw new AfrException('Alias can\'t be empty');
+            throw new AfrDatabaseConnectionException('Alias can\'t be empty');
         }
         if (empty(self::$instances[static::class][$sConnAlias])) {
             return self::$instances[static::class][$sConnAlias] = new static($sConnAlias);
