@@ -4,7 +4,7 @@ namespace Autoframe\Database\Orm\Action;
 
 use \Autoframe\Database\Connection\Exception\AfrDatabaseConnectionException;
 
-trait AfrPdoAliasSingletonTrait
+trait CnxActionSingletonTrait
 {
     /**
      * The actual singleton's instance almost always resides inside a static
@@ -14,7 +14,7 @@ trait AfrPdoAliasSingletonTrait
     protected static array $instances = [];
     protected string $sConnAlias;
 
-    public function getConnAlias(): string
+    public function getNameConnAlias(): string
     {
         return $this->sConnAlias;
     }
@@ -52,7 +52,7 @@ trait AfrPdoAliasSingletonTrait
      * @return self
      * @throws AfrDatabaseConnectionException
      */
-    final public static function makeFromConnAlias(string $sConnAlias): self
+    final public static function getInstanceWithConnAlias(string $sConnAlias): self
     {
         if (empty($sConnAlias)) {
             throw new AfrDatabaseConnectionException('Alias can\'t be empty');

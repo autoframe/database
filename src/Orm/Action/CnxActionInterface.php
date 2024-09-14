@@ -5,42 +5,24 @@ namespace Autoframe\Database\Orm\Action;
 use Autoframe\Database\Connection\Exception\AfrDatabaseConnectionException;
 use Autoframe\Database\Orm\Blueprint\AfrOrmBlueprintInterface;
 
-interface CnxActionInterface extends AfrOrmBlueprintInterface
+interface CnxActionInterface extends AfrOrmBlueprintInterface, EscapeInterface
 {
+// todo: de descompus / mutat din AfrOrmActionInterface \ use Doctrine\DBAL\Types\Types;
 
-    //SET FOREIGN_KEY_CHECKS=0;
-    //SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-    //START TRANSACTION;
-    //SET time_zone = "+00:00";
-    //...
-    //SET FOREIGN_KEY_CHECKS=1;
-    //COMMIT;
-
-    /*
-
-
-    //USE db_name; SELECT @@character_set_database, @@collation_database;
-    //SELECT * FROM `information_schema`.`COLLATIONS` ORDER BY `COLLATIONS`.`IS_DEFAULT` DESC, `COLLATIONS`.`COLLATION_NAME` DESC;
-
-
-    public function escapeDbTableName($sName_Database_Table_Column): string;
-    public function escapeDbColumnName($sName_Database_Table_Column): string;
-
-    public function escapeValueAsMixed($mValue);
-    public function escapeValueAsString($mValue):string;
 
     /**
      * @param string $sAlias
-     * @return string FQCN
      * @throws AfrDatabaseConnectionException
      */
-    public static function withConnAlias(string $sAlias): CnxActionInterface;
+    public static function getInstanceWithConnAlias(string $sAlias);
+
+    public function getNameConnAlias(): string; //singleton info
 
     /**
      * @param string $sDbNameLike filter database name like or %startsWith or containing %part%
      * @return array
      */
-    public function dbListAll(string $sDbNameLike = ''): array;
+    public function cnxGetAllDatabaseNames(string $sDbNameLike = ''): array;
 
     /**
      * The response array should contain the keys: self::DB_NAME, self::CHARSET, self::COLLATION
@@ -48,22 +30,22 @@ interface CnxActionInterface extends AfrOrmBlueprintInterface
      * @return array
      * @throws AfrDatabaseConnectionException
      */
-    public function CnxListAllDatabasesWithProperties(string $sDbNameLike = ''): array;
+    public function cnxGetAllDatabaseNamesWithProperties(string $sDbNameLike = ''): array;
 
 
-    public function dbExists(string $sDbName): bool;
+    public function cnxDatabaseExists(string $sDbName): bool;
 
-    public function dbGetDefaultCharsetAndCollation(string $sDbName): array; //SHOW CHARACTER SET;
+    public function cnxDbGetDefaultCharsetAndCollation(string $sDbName): array; //SHOW CHARACTER SET;
 
-    public function dbSetDefaultCharsetAndCollation(string $sDbName, string $sCharset, string $sCollation = ''): bool;
+    public function cnxDbSetDefaultCharsetAndCollation(string $sDbName, string $sCharset, string $sCollation = ''): bool;
 
 
-    public function dbCreateUsingDefaultCharset(string $sDbName, array $aOptions = [], bool $bIfNotExists = false): bool;
+    public function cnxCreateDatabaseUsingDefaultCharset(string $sDbName, array $aOptions = [], bool $bIfNotExists = false): bool;
 
-    public function dbCreateUsingCharset(
+    public function cnxCreateDatabaseUsingCharset(
         string $sDbName,
-        string $sCharset = 'utf8mb4',
-        string $sCollate = 'utf8mb4_general_ci',
+        string $sCharset = 'utf8mb4',           //todo: _900_ai_ci  compatibility
+        string $sCollate = 'utf8mb4_general_ci', //todo: _900_ai_ci
         array  $aOptions = [],
         bool   $bIfNotExists = false
     ): bool;
@@ -75,7 +57,7 @@ interface CnxActionInterface extends AfrOrmBlueprintInterface
      * @return array
      * @throws AfrDatabaseConnectionException
      */
-    public function CnxGetCollationCharsetList(string $sLike = '', bool $bWildcard = false): array;
+    public function cnxGetAllCollationCharsets(string $sLike = '', bool $bWildcard = false): array;
 
 
     /**
@@ -84,7 +66,7 @@ interface CnxActionInterface extends AfrOrmBlueprintInterface
      * @return array An array of character set names.
      * @throws AfrDatabaseConnectionException If there is an error connecting to the database.
      */
-    public function pdoGetAllCharsets(): array; //SHOW CHARACTER SET;     //SELECT * FROM `information_schema`.`CHARACTER_SETS` ORDER BY `CHARACTER_SETS`.`CHARACTER_SET_NAME` DESC;
+    public function cnxGetAllCharsets(): array; //SHOW CHARACTER SET;     //SELECT * FROM `information_schema`.`CHARACTER_SETS` ORDER BY `CHARACTER_SETS`.`CHARACTER_SET_NAME` DESC;
 
     /**
      * Retrieves all the collations from the database.
@@ -92,14 +74,26 @@ interface CnxActionInterface extends AfrOrmBlueprintInterface
      * @return array An array containing all the collations.
      * @throws AfrDatabaseConnectionException If there is an issue with the database connection.
      */
-    public function pdoGetAllCollations(): array; //SHOW COLLATION     //SELECT * FROM `information_schema`.`CHARACTER_SETS` ORDER BY `CHARACTER_SETS`.`CHARACTER_SET_NAME` DESC;
+    public function cnxGetAllCollations(): array; //SHOW COLLATION     //SELECT * FROM `information_schema`.`CHARACTER_SETS` ORDER BY `CHARACTER_SETS`.`CHARACTER_SET_NAME` DESC;
 
-    public function cnxSetDefaultCharsetAndCollation(string $sCharset='utf8mb4',
-                                                     string $sCollation = 'utf8mb4_0900_ai_ci',
-                                                     bool $character_set_server = true,
-                                                     bool $character_set_database = false
+    public function cnxSetConnectionCharsetAndCollation(string $sCharset = 'utf8mb4',
+                                                        string $sCollation = 'utf8mb4_0900_ai_ci',
+                                                        bool   $character_set_server = true,
+                                                        bool   $character_set_database = false
     ): bool;
 
+    /**
+     * @param string $sDbName
+     * @return string
+     */
+    public function cnxShowCreateDatabase(string $sDbName): string;
 
+    //https://stackoverflow.com/questions/2934258/how-do-i-get-the-current-time-zone-of-mysql
+    //https://phoenixnap.com/kb/change-mysql-time-zone
+    //https://www.db4free.net/
+
+    public function cnxSetTimezone(string $sTimezone = '+00:00'): bool;
+
+    public function cnxGetTimezone(): string; //'+00:00';
 
 }

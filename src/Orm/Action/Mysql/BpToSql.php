@@ -89,7 +89,7 @@ trait BpToSql
         $sSql .= !empty($aBlueprint[static::AUTOINCREMENT]) ? 'AUTO_INCREMENT=' . $aBlueprint[static::AUTOINCREMENT] . ' ' : '';
         $sSql .= !empty($aBlueprint[static::CHARSET]) ? 'DEFAULT CHARSET=' . $aBlueprint[static::CHARSET] . ' ' : '';
         $sSql .= !empty($aBlueprint[static::COLLATION]) ? 'COLLATE=' . $aBlueprint[static::COLLATION] . ' ' : '';
-        $sSql .= !empty($aBlueprint[static::COMMENT]) ? 'COMMENT=' . self::encapsulateCellValue($aBlueprint[static::COMMENT]) . ' ' : '';
+        $sSql .= !empty($aBlueprint[static::COMMENT]) ? 'COMMENT=' . static::encapsulateCellValue($aBlueprint[static::COMMENT]) . ' ' : '';
 
         return $sSql;
     }

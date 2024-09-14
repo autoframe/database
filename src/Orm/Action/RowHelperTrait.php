@@ -2,7 +2,7 @@
 
 namespace Autoframe\Database\Orm\Action;
 
-trait AfrPdoHelperTrait
+trait RowHelperTrait
 {
 
     public static function rowToArray($objOrArr): array

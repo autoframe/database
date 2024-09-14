@@ -4,27 +4,38 @@ namespace Autoframe\Database\Orm\Action\Mysql;
 
 use Autoframe\Database\Connection\Exception\AfrDatabaseConnectionException;
 use Autoframe\Database\Orm\Action\CnxActionInterface;
-use Autoframe\Database\Orm\Action\AfrPdoAliasSingletonTrait;
+use Autoframe\Database\Orm\Action\CnxActionSingletonTrait;
 
 class CnxAction implements CnxActionInterface
 {
     use PdoInteractTrait;
-    use Encapsulate;
+    use EscapeTrait;
     use Syntax;
-    use AfrPdoAliasSingletonTrait;
+    use CnxActionSingletonTrait;
 
+
+    /**
+     * @throws AfrDatabaseConnectionException
+     */
+    protected function trimDbName(string &$sDbName, bool $bErrorOnEmpty)
+    {
+        $sDbName = trim($sDbName);
+        if ($bErrorOnEmpty && strlen($sDbName) < 1) {
+            throw new AfrDatabaseConnectionException('Database name is empty');
+        }
+    }
 
     /**
      * @param string $sDbNameLike
      * @return array
      * @throws AfrDatabaseConnectionException
      */
-    public function dbListAll(string $sDbNameLike = ''): array
+    public function cnxGetAllDatabaseNames(string $sDbNameLike = ''): array
     {
         $this->trimDbName($sDbNameLike, false);
         return $this->getRowsValue(
             'SHOW DATABASES' . (
-            strlen($sDbNameLike) ? ' LIKE ' . self::encapsulateCellValue($sDbNameLike) : ''
+            strlen($sDbNameLike) ? ' LIKE ' . static::encapsulateCellValue($sDbNameLike) : ''
             )
         );
     }
@@ -35,13 +46,13 @@ class CnxAction implements CnxActionInterface
      * @return array
      * @throws AfrDatabaseConnectionException
      */
-    public function CnxListAllDatabasesWithProperties(string $sDbNameLike = ''): array
+    public function cnxGetAllDatabaseNamesWithProperties(string $sDbNameLike = ''): array
     {
         $this->trimDbName($sDbNameLike, false);
 
         $aRows = $this->getAllRows(
             'SELECT * FROM `information_schema`.`SCHEMATA`' . (
-            strlen($sDbNameLike) ? ' WHERE `SCHEMA_NAME` LIKE ' . self::encapsulateCellValue($sDbNameLike) : ''
+            strlen($sDbNameLike) ? ' WHERE `SCHEMA_NAME` LIKE ' . static::encapsulateCellValue($sDbNameLike) : ''
             ), 'SCHEMA_NAME');
         foreach ($aRows as &$aRow) {
             $aRow[self::DB_NAME] = $aRow['SCHEMA_NAME'];
@@ -56,10 +67,10 @@ class CnxAction implements CnxActionInterface
      * @return bool
      * @throws AfrDatabaseConnectionException
      */
-    public function dbExists(string $sDbName): bool
+    public function cnxDatabaseExists(string $sDbName): bool
     {
         $this->trimDbName($sDbName, true);
-        return in_array($sDbName, $this->dbListAll($sDbName));
+        return in_array($sDbName, $this->cnxGetAllDatabaseNames($sDbName));
     }
 
     /**
@@ -67,10 +78,10 @@ class CnxAction implements CnxActionInterface
      * @return array
      * @throws AfrDatabaseConnectionException
      */
-    public function dbGetDefaultCharsetAndCollation(string $sDbName): array
+    public function cnxDbGetDefaultCharsetAndCollation(string $sDbName): array
     {
         $this->trimDbName($sDbName, true);
-        $aList = $this->CnxListAllDatabasesWithProperties($sDbName);
+        $aList = $this->cnxGetAllDatabaseNamesWithProperties($sDbName);
         return [
             static::DB_NAME => isset($aList[$sDbName]) ? $sDbName : null,
             static::CHARSET => $aList[$sDbName]['DEFAULT_CHARACTER_SET_NAME'] ?? null,
@@ -85,23 +96,23 @@ class CnxAction implements CnxActionInterface
      * @return bool
      * @throws AfrDatabaseConnectionException
      */
-    public function dbSetDefaultCharsetAndCollation(string $sDbName, string $sCharset, string $sCollation = ''): bool
+    public function cnxDbSetDefaultCharsetAndCollation(string $sDbName, string $sCharset, string $sCollation = ''): bool
     {
         $this->trimDbName($sDbName, true);
-        return $this->dbCreateUsingCharset($sDbName, $sCharset, $sCollation, [], true);
+        return $this->cnxCreateDatabaseUsingCharset($sDbName, $sCharset, $sCollation, [], true);
     }
 
     /**
      * @throws AfrDatabaseConnectionException
      */
-    public function dbCreateUsingDefaultCharset(string $sDbName, array $aOptions = [], bool $bIfNotExists = false): bool
+    public function cnxCreateDatabaseUsingDefaultCharset(string $sDbName, array $aOptions = [], bool $bIfNotExists = false): bool
     {
         $this->trimDbName($sDbName, true);
 
-        $aUtf = $this->CnxGetCollationCharsetList('utf8%general_ci', false);
+        $aUtf = $this->cnxGetAllCollationCharsets('utf8%general_ci', false);
         $sCharset = $aUtf['utf8mb4_general_ci'] ?? ($aUtf['utf8_general_ci'] ?? 'utf8');
         $sCollate = $sCharset . '_general_ci';
-        return $this->dbCreateUsingCharset($sDbName, $sCharset, $sCollate, $aOptions, $bIfNotExists);
+        return $this->cnxCreateDatabaseUsingCharset($sDbName, $sCharset, $sCollate, $aOptions, $bIfNotExists);
     }
 
     //sql_mode=NO_ZERO_IN_DATE,NO_ZERO_DATE,NO_ENGINE_SUBSTITUTION
@@ -125,7 +136,7 @@ class CnxAction implements CnxActionInterface
      * @return bool
      * @throws AfrDatabaseConnectionException
      */
-    public function dbCreateUsingCharset(
+    public function cnxCreateDatabaseUsingCharset(
         string $sDbName,
         string $sCharset = 'utf8mb4',
         string $sCollate = 'utf8mb4_general_ci',
@@ -135,7 +146,7 @@ class CnxAction implements CnxActionInterface
     {
         $this->trimDbName($sDbName, true);
 
-        $aCollationList = $this->CnxGetCollationCharsetList($sCharset, true);
+        $aCollationList = $this->cnxGetAllCollationCharsets($sCharset, true);
         if (!isset($aCollationList[$sCollate])) {
             $aCollationListMatchingCharset = array_keys($aCollationList, $sCharset);
             foreach ($aCollationListMatchingCharset as $sCollateX) {
@@ -162,7 +173,7 @@ class CnxAction implements CnxActionInterface
             $iMajor = (int)$aSvVersion[0];
             $iMinor = !empty($aSvVersion[1]) ? (int)$aSvVersion[1] : 0;
             if (stripos($sSvVersion, 'MariaDB') && ($iMajor === 10 && $iMinor >= 5 || $iMajor > 10)) {
-                $sComment = ' COMMENT ' . self::encapsulateCellValue($sComment); // >= MariaDb 10.5.0
+                $sComment = ' COMMENT ' . static::encapsulateCellValue($sComment); // >= MariaDb 10.5.0
                 // information_schema.schemata SCHEMA_COMMENT
             } else {
                 $sComment = '';
@@ -170,7 +181,7 @@ class CnxAction implements CnxActionInterface
 
         }
 
-        if ($this->dbExists($sDbName)) {
+        if ($this->cnxDatabaseExists($sDbName)) {
             $sSql = 'ALTER DATABASE ';
             $sSql .= self::encapsulateDbTblColName($sDbName);
             $sSql .= " CHARACTER SET $sCharset COLLATE $sCollate ";
@@ -201,7 +212,7 @@ class CnxAction implements CnxActionInterface
      * @return array
      * @throws AfrDatabaseConnectionException
      */
-    public function CnxGetCollationCharsetList(string $sLike = '', bool $bWildcard = null): array
+    public function cnxGetAllCollationCharsets(string $sLike = '', bool $bWildcard = null): array
     {
         $sSqlLike = '';
         if (strlen($sLike)) {
@@ -209,7 +220,7 @@ class CnxAction implements CnxActionInterface
                 $bWildcard = true;
             }
             $sLike = $bWildcard ? '%' . $sLike . '%' : $sLike;
-            $sSqlLike = ' WHERE `COLLATION_NAME` LIKE ' . self::encapsulateCellValue($sLike);
+            $sSqlLike = ' WHERE `COLLATION_NAME` LIKE ' . static::encapsulateCellValue($sLike);
         }
         $aResults = [];
         foreach ($this->getAllRows(
@@ -221,16 +232,7 @@ class CnxAction implements CnxActionInterface
 
     }
 
-    /**
-     * @throws AfrDatabaseConnectionException
-     */
-    protected function trimDbName(string &$sDbName, bool $bErrorOnEmpty)
-    {
-        $sDbName = trim($sDbName);
-        if ($bErrorOnEmpty && strlen($sDbName) < 1) {
-            throw new AfrDatabaseConnectionException('Database name is empty');
-        }
-    }
+
 
     /**
      * Retrieves all available character sets from the database.
@@ -238,8 +240,9 @@ class CnxAction implements CnxActionInterface
      * @return array An array of character set names.
      * @throws AfrDatabaseConnectionException If there is an error connecting to the database.
      */
-    public function pdoGetAllCharsets(): array
+    public function cnxGetAllCharsets(): array
     {
+        ///SHOW CHARACTER SET;
         return $this->getRowsValue(
             'SELECT CHARACTER_SET_NAME FROM `information_schema`.`CHARACTER_SETS` ORDER BY `CHARACTER_SET_NAME` DESC'
         );
@@ -251,8 +254,9 @@ class CnxAction implements CnxActionInterface
      * @return array An array containing all the collations.
      * @throws AfrDatabaseConnectionException If there is an issue with the database connection.
      */
-    public function pdoGetAllCollations(): array
+    public function cnxGetAllCollations(): array
     {
+        //SHOW COLLATION
         return $this->getRowsValue(
             'SELECT * FROM `information_schema`.`CHARACTER_SETS` ORDER BY `CHARACTER_SETS`.`CHARACTER_SET_NAME` DESC'
         );
@@ -261,7 +265,7 @@ class CnxAction implements CnxActionInterface
     /**
      * @throws AfrDatabaseConnectionException
      */
-    public function cnxSetDefaultCharsetAndCollation(
+    public function cnxSetConnectionCharsetAndCollation(
         string $sCharset = 'utf8mb4',
         string $sCollation = 'utf8mb4_0900_ai_ci',
         bool   $character_set_server = true,
@@ -302,9 +306,62 @@ class CnxAction implements CnxActionInterface
     /**
      * @throws AfrDatabaseConnectionException
      */
-    public function showCreateDb(string $sDbName): string
+    public function cnxShowCreateDatabase(string $sDbName): string
     {
         $aRow = $this->getRow('SHOW CREATE DATABASE ' . self::encapsulateDbTblColName($sDbName));
         return $aRow['Create Database'] ?? end($aRow);
+    }
+
+    //https://stackoverflow.com/questions/2934258/how-do-i-get-the-current-time-zone-of-mysql
+    //https://phoenixnap.com/kb/change-mysql-time-zone
+    //https://www.db4free.net/
+    /**
+     * @param string $sTimezone +00:00 or +02:00 ...
+     * @return bool
+     * @throws AfrDatabaseConnectionException
+     */
+    public function cnxSetTimezone(string $sTimezone = '+00:00'): bool
+    {
+        return (bool)$this->execPdoStatement(
+            'SET time_zone = ' . $this->escapeValueAsMixed(empty($sTimezone) ? '+00:00' : $sTimezone)
+        );
+// timezone values can be given in several formats, none of which are case-sensitive:
+//    As the value 'SYSTEM', indicating that the server time zone is the same as the system time zone.
+//    As a string indicating an offset from UTC of the form [H]H:MM, prefixed with a + or -, such as '+10:00', '-6:00', or '+05:30'. A leading zero can optionally be used for hours values less than 10; MySQL prepends a leading zero when storing and retrieving the value in such cases. MySQL converts '-00:00' or '-0:00' to '+00:00'.
+//    This value must be in the range '-13:59' to '+14:00', inclusive.
+//    As a named time zone, such as 'Europe/Helsinki', 'US/Eastern', 'MET', or 'UTC'.
+    }
+
+    /**
+     * @throws AfrDatabaseConnectionException
+     */
+    public function cnxGetTimezone(int $iSnapHourInto = 2): string //'+00:00';
+    {
+        //SELECT @@global.time_zone as g, @@session.time_zone as s ,NOW() as n
+        $sServerNow = $this->getCell('SELECT NOW()');
+        $iUTC = strtotime($sServerNow.' UTC');
+        //$iUTC+=60*16;
+
+        $delta = $iUTC-time();
+
+        $sign = $delta<0?'-':'+';
+
+        $hours = floor(abs($delta) / 3600);
+
+        $minutes = floor((abs($delta) / 60) % 60);
+
+        $iSnapHourInto = max(min(abs($iSnapHourInto),60),1);//max 60 part as minutes
+
+        $hourParts = ceil(60 / $iSnapHourInto);
+        $minutes_snap_to_15 = abs(ceil(($minutes - $hourParts / 2) / $hourParts));
+        if ($minutes_snap_to_15 > $iSnapHourInto - 1) {
+            $hours++;
+            $minutes_snap_to_15 = 0;
+        }
+        $minutes = $minutes_snap_to_15 * $hourParts;
+
+        return $sign.
+            ($hours <=9 ? "0" . $hours : $hours).':'.
+            ($minutes <=9 ? "0" . $minutes : $minutes);
     }
 }

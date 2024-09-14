@@ -1,3 +1,10 @@
+# left-off:
+
+de revizuit convertFacade / interface sa mearga fara sau cu Alias....
+
+de facut interfata / fatada pentru DB si tbl / apoi entity
+
+
 # trebuie sa:
     
 ## sa rescriu il loc de with static sa fie pe instante

@@ -36,6 +36,21 @@ interface AfrDbConnectionManagerInterface
         'sqlite' => null,
     ];
 
+
+    /**
+     * @param string|null $sDataLayerNamespace
+     * @return string or default namespace: Autoframe\DataLayer\
+     */
+    public function dataLayerNamespace(string $sDataLayerNamespace = null): string;
+
+    /**
+     * @param string|null $sDataLayerPath
+     * @return string
+     * @throws AfrDatabaseConnectionException
+     */
+    public function dataLayerPath(string $sDataLayerPath = null): string;
+
+
     /**
      * @param string $sAlias
      * @param string $sDSN

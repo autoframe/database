@@ -1,11 +1,14 @@
 <?php
 
-namespace Autoframe\Database\Connection;
+namespace Autoframe\Database\Orm;
 
-use Autoframe\DesignPatterns\Singleton\AfrSingletonAbstractClass;
+use Autoframe\Database\Connection\AfrDbConnectionManager;
 use Autoframe\Database\Connection\Exception\AfrDatabaseConnectionException;
+use Autoframe\DesignPatterns\Singleton\AfrSingletonAbstractClass;
 use PDO;
 use PDOStatement;
+use function Autoframe\Database\Connection\prea;
+use function Autoframe\Database\Connection\s;
 
 class AfrDbMysql extends AfrSingletonAbstractClass
 {

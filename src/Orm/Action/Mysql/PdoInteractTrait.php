@@ -4,12 +4,12 @@ namespace Autoframe\Database\Orm\Action\Mysql;
 
 use Autoframe\Database\Connection\AfrDbConnectionManager;
 use Autoframe\Database\Connection\Exception\AfrDatabaseConnectionException;
-use Autoframe\Database\Orm\Action\AfrPdoHelperTrait;
+use Autoframe\Database\Orm\Action\RowHelperTrait;
 use PDO;
 
 trait PdoInteractTrait
 {
-    use AfrPdoHelperTrait;
+    use RowHelperTrait;
 
     //todo cache, performance logger, etc
 
@@ -43,13 +43,13 @@ trait PdoInteractTrait
 
     /**
      * @param string $sQuery
-     * @return string|int|float|null
+     * @return string|int|float|null|mixed
      * @throws AfrDatabaseConnectionException
      */
-    public function getCell(string $sQuery): ?string
+    public function getCell(string $sQuery)
     {
         $aRow = $this->getRow($sQuery);
-        return array_pop($aRow);
+        return count($aRow) > 0 ? array_pop($aRow) : null;
     }
 
     /** Multiple query
@@ -100,5 +100,50 @@ trait PdoInteractTrait
     {
         return $this->getPdo()->exec($sQuery);
     }
+
+    /**
+     * @param string $sQuery
+     * @return string|int|float|null|mixed
+     * @throws AfrDatabaseConnectionException
+     */
+    public function oneQuery(string $sQuery)
+    {
+        return $this->getCell($sQuery);
+
+    }
+
+    /**
+     * @param string $sQuery
+     * @return array
+     * @throws AfrDatabaseConnectionException
+     */
+    public function valuesQuery(string $sQuery): array
+    {
+        return $this->getRowsValue($sQuery);
+
+    }
+
+    /**
+     * @param string $sQuery
+     * @return array
+     * @throws AfrDatabaseConnectionException
+     */
+    public function manyQuery(string $sQuery): array
+    {
+        return $this->getRow($sQuery);
+
+    }
+
+    /**
+     * @param string $sQuery
+     * @return array
+     * @throws AfrDatabaseConnectionException
+     */
+    public function multipleQuery(string $sQuery): array
+    {
+        return $this->getRowsValue($sQuery);
+    }
+
+
 
 }

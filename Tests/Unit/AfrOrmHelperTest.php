@@ -240,18 +240,19 @@ class AfrOrmHelperTest extends TestCase
             "1234"
         );
         $oAfrDatabase = CnxActionFacade::withConnAlias('test');
-//        $aResults['dbListAll'] = $oAfrDatabase->dbListAll();
-//        $aResults['dbListAll-%dmin%'] = $oAfrDatabase->dbListAll('%dmin%');
-        $aResults['CnxListAllDatabasesWithProperties'] = $oAfrDatabase->CnxListAllDatabasesWithProperties();
-//        $aResults['dbExists-dms'] = $oAfrDatabase->dbExists('dms');
-//        $aResults['dbExists-dmsX'] = $oAfrDatabase->dbExists('dmsX');
-        $aResults['dbGetDefaultCharsetAndCollation-admin_new'] = $oAfrDatabase->dbGetDefaultCharsetAndCollation('admin_new');
+//        $aResults['cnxGetAllDatabaseNames'] = $oAfrDatabase->cnxGetAllDatabaseNames();
+//        $aResults['cnxGetAllDatabaseNames-%dmin%'] = $oAfrDatabase->cnxGetAllDatabaseNames('%dmin%');
+        $aResults['cnxGetAllDatabaseNamesWithProperties'] = $oAfrDatabase->cnxGetAllDatabaseNamesWithProperties();
+//        $aResults['cnxDatabaseExists-dms'] = $oAfrDatabase->cnxDatabaseExists('dms');
+//        $aResults['cnxDatabaseExists-dmsX'] = $oAfrDatabase->cnxDatabaseExists('dmsX');
+        $aResults['cnxDbGetDefaultCharsetAndCollation-admin_new'] = $oAfrDatabase->cnxDbGetDefaultCharsetAndCollation('admin_new');
         $aResults['charsetsX'] = AfrDbConnectionManager::getInstance()->getAliasInfo('test');
-//        $aResults['dbSetDefaultCharsetAndCollation-admin_new'] = $oAfrDatabase->dbSetDefaultCharsetAndCollation('admin_new','utf8mb4');
-//        $aResults['dbCreateUsingDefaultCharset'] = $oAfrDatabase->dbCreateUsingDefaultCharset('dbCreateUsingDefaultCharset'.time());
-//        $aResults['dbCreateUsingCharset'] = $oAfrDatabase->dbCreateUsingCharset('dbCreateUsingCharset'.time());
-//        $aResults['CnxGetCollationCharsetList'] = $oAfrDatabase->CnxGetCollationCharsetList();
-//        $aResults['CnxGetCollationCharsetList-utf8%general_ci'] = $oAfrDatabase->CnxGetCollationCharsetList('utf8%general_ci',false);
+//        $aResults['cnxDbSetDefaultCharsetAndCollation-admin_new'] = $oAfrDatabase->cnxDbSetDefaultCharsetAndCollation('admin_new','utf8mb4');
+//        $aResults['cnxCreateDatabaseUsingDefaultCharset'] = $oAfrDatabase->cnxCreateDatabaseUsingDefaultCharset('cnxCreateDatabaseUsingDefaultCharset'.time());
+//        $aResults['cnxCreateDatabaseUsingCharset'] = $oAfrDatabase->cnxCreateDatabaseUsingCharset('cnxCreateDatabaseUsingCharset'.time());
+//        $aResults['cnxGetAllCollationCharsets'] = $oAfrDatabase->cnxGetAllCollationCharsets();
+//        $aResults['cnxGetAllCollationCharsets-utf8%general_ci'] = $oAfrDatabase->cnxGetAllCollationCharsets('utf8%general_ci',false);
+        $aResults['cnxGetTimezone'] = $oAfrDatabase->cnxGetTimezone();
 
 
         $this->assertSame('x', 'y', print_r($aResults, true));

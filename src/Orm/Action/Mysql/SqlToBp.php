@@ -731,7 +731,7 @@ trait SqlToBp
                 $sAttr === 'CHECK' ||
                 in_array($sAttr, ['DEFAULT', 'ON UPDATE']) && stripos((string)$mVal, 'CURRENT_TIMESTAMP()') === 0;
 
-            $sSql .= $sAttr . ' ' . ($bInline ? $mVal : self::encapsulateCellValue($mVal)) . ' ';
+            $sSql .= $sAttr . ' ' . ($bInline ? $mVal : static::encapsulateCellValue($mVal)) . ' ';
         }
         $sSql .= !empty($aProps[static::LEFT_OVER_PARSE]) ? $aProps[static::LEFT_OVER_PARSE] . ' ' : '';
         return rtrim($sSql);

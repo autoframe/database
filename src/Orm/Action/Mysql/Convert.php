@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Autoframe\Database\Orm\Action\Mysql;
 
+use Autoframe\Database\Orm\Action\CnxActionSingletonTrait;
 use Autoframe\Database\Orm\Action\ConvertInterface;
 use Autoframe\Database\Orm\Blueprint\AfrOrmBlueprintInterface;
 
@@ -47,11 +48,12 @@ use Autoframe\Database\Orm\Blueprint\AfrOrmBlueprintInterface;
  *      You can set lazy load to false in the comments or blueprint or on the entity
  * Columns can be readonly (not updatable) when updating
  */
-class Convert implements AfrOrmBlueprintInterface, ConvertInterface
+class Convert implements ConvertInterface
 {
     use Syntax;
-    use Encapsulate;
+    use EscapeTrait;
     use SqlToBp;
     use BpToSql;
+    use CnxActionSingletonTrait;
 }
 
