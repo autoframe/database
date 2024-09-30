@@ -19,7 +19,7 @@ class MigrateFromDb implements AfrOrmBlueprintInterface
     {
         $oAfrDatabase = CnxActionFacade::withConnAlias($sAlias);
         //The response array should contain the keys: self::DB_NAME, self::CHARSET, self::COLLATION
-        foreach ($oAfrDatabase->cnxGetAllDatabaseNamesWithProperties() as $dbProperties) {
+        foreach ($oAfrDatabase->cnxGetAllDatabaseNamesWithCharset() as $dbProperties) {
             $sCharset = $dbProperties[self::CHARSET];
             $sCollation = $dbProperties[self::COLLATION];
             $sDbName = $dbProperties[self::DB_NAME];

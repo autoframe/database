@@ -2,23 +2,22 @@
 
 namespace Autoframe\Database\Orm\Action;
 
+use Autoframe\Database\Connection\AfrDbConnectionManager;
 use Autoframe\Database\Connection\Exception\AfrDatabaseConnectionException;
 use Autoframe\Database\Orm\Blueprint\AfrOrmBlueprintInterface;
 use Autoframe\Database\Orm\Exception\AfrOrmException;
 
 class ConvertFacade implements AfrOrmBlueprintInterface
 {
-    use ResolveForFacade;
     /**
      * @param string $sAlias
-     * @param string $sDialectClass
      * @return ConvertInterface
      * @throws AfrDatabaseConnectionException|AfrOrmException
      */
-    public static function withConnAlias(string $sAlias, string $sDialectClass = ''): ConvertInterface
+    public static function withConnAlias(string $sAlias): ConvertInterface
     {
-        /** @var ConvertInterface $sFQCN_Implementing_ConvertInterface */
-        $sFQCN_Implementing_ConvertInterface = static::resolveAlias($sAlias, $sDialectClass);
-        return $sFQCN_Implementing_ConvertInterface::getInstanceWithConnAlias($sAlias);
+        /** @var ConvertInterface $sFQCN */
+        $sFQCN = AfrDbConnectionManager::getInstance()->resolveFacadeUsingAlias(static::class, $sAlias);
+        return $sFQCN::getInstanceWithConnAlias($sAlias);
     }
 }

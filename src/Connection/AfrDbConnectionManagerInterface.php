@@ -14,6 +14,7 @@ interface AfrDbConnectionManagerInterface
     const CLOSURE = 'oClosure';
     const INFO = 'aInfo';
     const FQCN_PDO = 'sPdoFqcnClass';
+    const CUSTOM_DIALECT_CNX_NS = 'sDialectOrmActionNamespace';
 
     const DSN = 'sDSN';
     const HOST = 'host';
@@ -67,10 +68,11 @@ interface AfrDbConnectionManagerInterface
      * @param string $sAlias
      * @param PDO $pdo
      * @param string $sDriver Types: mysql, sqlite, pgsql, mssql, cubrid, sybase, dblib, firebird, ibm, informix, oci, odbc
+     * @param string $sDialectOrmActionNamespace
      * @return void
      * @throws AfrDatabaseConnectionException
      */
-    public function defineConnectionAliasUsingPDOInstance(string $sAlias, PDO $pdo, string $sDriver): AfrDbConnectionManagerInterface;
+    public function defineConnectionAliasUsingPDOInstance(string $sAlias, PDO $pdo, string $sDriver, string $sDialectOrmActionNamespace = ''): AfrDbConnectionManagerInterface;
 
 
     /**
@@ -87,6 +89,17 @@ interface AfrDbConnectionManagerInterface
      */
     public function defineAliasClosure(string $sAlias, Closure $oClosure): AfrDbConnectionManagerInterface;
 
+
+    /**
+     * @param string $sAlias
+     * @param string $sDialectOrmActionNamespace
+     * @return $this
+     * @throws AfrDatabaseConnectionException
+     */
+    public function defineCustomDialectCnxNs(
+        string  $sAlias,
+        string $sDialectOrmActionNamespace
+    ): AfrDbConnectionManagerInterface;
     /**
      * @param $sAlias
      * @return PDO
@@ -112,8 +125,15 @@ interface AfrDbConnectionManagerInterface
      * @return string Types: mysql, sqlite, pgsql, mssql, cubrid, sybase, dblib, firebird, ibm, informix, oci, odbc
      * @throws AfrDatabaseConnectionException
      */
-    public function driverType(string $sAlias): string;
+    public function getDriverType(string $sAlias): string;
 
+
+    /**
+     * @param string $sAlias
+     * @return string
+     * @throws AfrDatabaseConnectionException
+     */
+    public function getCustomDialectCnxNs(string $sAlias): string;
 
     /**
      * @return void

@@ -7,32 +7,63 @@ use Doctrine\DBAL\Types\Types;
 
 interface TblActionInterface extends AfrOrmBlueprintInterface, EscapeInterface
 {
-// todo: de descompus / mutat din AfrOrmActionInterface \ use Doctrine\DBAL\Types\Types;
+    public static function getInstanceWithConnAliasAndDatabaseAndTable(
+        string $sAlias,
+        string $sDatabaseName,
+        string $sTableName
+    );
 
+    public static function getInstanceUsingDbiTable(
+        DbActionInterface $oDbActionInterface,
+        string            $sTableName
+    );
 
+    public static function getInstanceUsingCnxiAndDatabaseAndTable(
+        CnxActionInterface $oCnxActionInterface,
+        string             $sDatabaseName,
+        string             $sTableName
+    );
+
+    public function getInstanceConnAlias():CnxActionInterface;
+    public function getInstanceDatabase():DbActionInterface;
+
+    public function getNameConnAlias(): string; //singleton info
+    public function getNameDatabase(): string; //singleton info
+    public function getNameTable(): string; //singleton info
+
+    public function tblListAllSiblings(bool $bSelfInclusive = true): array;
+    public function tblListAllSiblingsWithCharset(bool $bSelfInclusive = true): array;
+
+    //obvious it exists, otherwise no entity :D
+    public function tblExists(string $sTblName, string $sDbName): bool;
+
+    public static function tblGetCharsetAndCollation(): array;
+    public static function tblSetCharsetAndCollation(string $sCharset, string $sCollation = ''): bool;
 
 
 //https://stackoverflow.com/questions/67093/how-do-i-rename-a-mysql-database-change-schema-name
 //SELECT CONCAT('RENAME TABLE admin_new.', table_name, ' TO NNNEEEWWWW.', table_name, '; ') FROM information_schema.TABLES WHERE table_schema='admin_new';
 //    public static function dbRename(string $sDbFrom, string $sDbTo): bool;
 
-    /** Poate fac aici o singura metoda cu cheia sa fie numele db-ului la returen */
-    public static function colListAll(string $sDbFrom, string $sTblFrom): array;
-    public static function colListAllWithProperties(string $sDbFrom, string $sTblFrom): array;
 
-    public static function colExists(string $sColName,string $sTblName, string $sDbName): bool;
-    public static function colRename(string $sColNameFrom,string $sColNameTo,string $sTblName, string $sDbName): bool;
+//todo o clasa de datatype de coloana cu o metoda to sql care sa fie plugged in aici si sa aiba / faca manage la primary data types
+    /** Poate fac aici o singura metoda cu cheia sa fie numele db-ului la returen */
+    public static function colListAll(): array; //numai numele
+    public static function colListAllWithProperties(): array;//???? wtf
+
+    public static function colExists(string $sColName): bool;
+    public static function colRename(string $sColNameFrom,string $sColNameTo): bool;
 
     //flags primary key
-    public static function colCreateType(string $sColName, string $sTblTo, string $sDb, string $sDataType, array $aOptions = []): bool;
-    public static function colCreateInt(string $sColName, string $sTblTo, string $sDb, string $sDataType = Types::INTEGER, array $aOptions = []): bool;
+    public static function colCreateType(string $sColName, string $sDataType, array $aOptions = []): bool;
+    public static function colCreateInt(string $sColName, string $sDataType = Types::INTEGER, array $aOptions = []): bool;
     // SHOW CREATE DATABASE|TABLE ****
-    // CREATE DATABASE `testswmb4` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_swedish_ci */
+
     public static function colCreateFull(
         string $sColName,
         string $sType,
-        string $sCharset = 'utf8',
-        string $sCollate = 'utf8_general_ci',
+        string $sCharset = 'utf8mb4',
+        string $sCollate = 'utf8mb4_general_ci',
         array  $aOptions = []
     ): bool;
 

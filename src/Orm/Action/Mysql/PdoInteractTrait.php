@@ -19,7 +19,7 @@ trait PdoInteractTrait
     protected function getPdo(): PDO
     {
         return AfrDbConnectionManager::getInstance()->getConnectionByAlias(
-            $this->sConnAlias
+            $this->getNameConnAlias()
         );
     }
 

@@ -18,7 +18,6 @@ trait AfrOrmDbMutateTrait
      */
     public static function _ORM_Db_Create($sCollation): bool
     {
-        //todo implement!! or implement under AfrOrmActionInterface
         //        $oManager = static::_ORM_Cnx_Manager();
         $sDriver = static::_ORM_Cnx_Driver();
         $oPdo = static::_ORM_Cnx_Pdo();

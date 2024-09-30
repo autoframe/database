@@ -45,7 +45,7 @@ class AfrDbConnectionManagerTest extends TestCase
 
   $pdo = new PDO("informix:host=host.domain.com; service=9800; database=common_db; server=ids_server; protocol=onsoctcp; EnableScrollableCursors=1", "testuser", "tespass"); #PDO_INFORMIX
 
-  $pdo = new PDO("mysql:host=$host;port=3307;dbname=$dbname;charset=utf8mb4", $user, $pass);# MySQL with PDO_MYSQL
+  $pdo = new PDO("mysql:host=$host;port=3307;dbname=$dbname;sPdoFqcnClass=\PDO;charset=utf8mb4", $user, $pass);# MySQL with PDO_MYSQL
   $pdo = new PDO("mysql:unix_socket=/tmp/mysql.sock;dbname=testdb", $user, $pass);# MySQL with PDO_MYSQL
 
   $pdo = new PDO("oci:dbname=192.168.10.145:1521/mydb;charset=CL8MSWIN1251", "testuser", "tespass"); #Oracle Instant Client PDO_OCI

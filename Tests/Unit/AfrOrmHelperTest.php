@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Unit;
 
 use Autoframe\Database\Connection\AfrDbConnectionManager;
+use Autoframe\Database\Orm\Action\DbActionFacade;
 use Autoframe\Database\Orm\Action\Mysql\Convert;
 use Autoframe\Database\Orm\Action\ConvertFacade as ConvertSwitch;
 use PHPUnit\Framework\TestCase;
@@ -231,6 +232,8 @@ class AfrOrmHelperTest extends TestCase
      */
     public function CnxActionFacadeTest(): void
     {
+        //https://www.db4free.net/
+
         $aResults = [];
         AfrDbConnectionManager::getInstance()->defineConnectionAlias(
             'test',
@@ -239,20 +242,33 @@ class AfrOrmHelperTest extends TestCase
             "git",
             "1234"
         );
-        $oAfrDatabase = CnxActionFacade::withConnAlias('test');
-//        $aResults['cnxGetAllDatabaseNames'] = $oAfrDatabase->cnxGetAllDatabaseNames();
-//        $aResults['cnxGetAllDatabaseNames-%dmin%'] = $oAfrDatabase->cnxGetAllDatabaseNames('%dmin%');
-        $aResults['cnxGetAllDatabaseNamesWithProperties'] = $oAfrDatabase->cnxGetAllDatabaseNamesWithProperties();
-//        $aResults['cnxDatabaseExists-dms'] = $oAfrDatabase->cnxDatabaseExists('dms');
-//        $aResults['cnxDatabaseExists-dmsX'] = $oAfrDatabase->cnxDatabaseExists('dmsX');
-        $aResults['cnxDbGetDefaultCharsetAndCollation-admin_new'] = $oAfrDatabase->cnxDbGetDefaultCharsetAndCollation('admin_new');
+        $oAfrCnx = CnxActionFacade::withConnAlias('test');
+//        $aResults['cnxGetAllDatabaseNames'] = $oAfrCnx->cnxGetAllDatabaseNames();
+//        $aResults['cnxGetAllDatabaseNames-%dmin%'] = $oAfrCnx->cnxGetAllDatabaseNames('%dmin%');
+        $aResults['cnxGetAllDatabaseNamesWithCharset'] = $oAfrCnx->cnxGetAllDatabaseNamesWithCharset();
+//        $aResults['cnxDatabaseExists-dms'] = $oAfrCnx->cnxDatabaseExists('dms');
+//        $aResults['cnxDatabaseExists-dmsX'] = $oAfrCnx->cnxDatabaseExists('dmsX');
+        $aResults['cnxDbGetCharsetAndCollation-admin_new'] = $oAfrCnx->cnxDbGetCharsetAndCollation('admin_new');
         $aResults['charsetsX'] = AfrDbConnectionManager::getInstance()->getAliasInfo('test');
-//        $aResults['cnxDbSetDefaultCharsetAndCollation-admin_new'] = $oAfrDatabase->cnxDbSetDefaultCharsetAndCollation('admin_new','utf8mb4');
-//        $aResults['cnxCreateDatabaseUsingDefaultCharset'] = $oAfrDatabase->cnxCreateDatabaseUsingDefaultCharset('cnxCreateDatabaseUsingDefaultCharset'.time());
-//        $aResults['cnxCreateDatabaseUsingCharset'] = $oAfrDatabase->cnxCreateDatabaseUsingCharset('cnxCreateDatabaseUsingCharset'.time());
-//        $aResults['cnxGetAllCollationCharsets'] = $oAfrDatabase->cnxGetAllCollationCharsets();
-//        $aResults['cnxGetAllCollationCharsets-utf8%general_ci'] = $oAfrDatabase->cnxGetAllCollationCharsets('utf8%general_ci',false);
-        $aResults['cnxGetTimezone'] = $oAfrDatabase->cnxGetTimezone();
+//        $aResults['cnxDbSetCharsetAndCollation-admin_new'] = $oAfrCnx->cnxDbSetCharsetAndCollation('admin_new','utf8mb4');
+//        $aResults['cnxCreateDatabaseUsingDefaultCharset'] = $oAfrCnx->cnxCreateDatabaseUsingDefaultCharset('cnxCreateDatabaseUsingDefaultCharset'.time());
+//        $aResults['cnxCreateDatabaseUsingCharset'] = $oAfrCnx->cnxCreateDatabaseUsingCharset('cnxCreateDatabaseUsingCharset'.time());
+//        $aResults['cnxGetAllCollationCharsets'] = $oAfrCnx->cnxGetAllCollationCharsets();
+//        $aResults['cnxGetAllCollationCharsets-utf8%general_ci'] = $oAfrCnx->cnxGetAllCollationCharsets('utf8%general_ci',false);
+        $aResults['cnxGetTimezone'] = $oAfrCnx->cnxGetTimezone();
+
+        $aResults = [];
+//        $oAfrDb = DbActionFacade::withConnAliasAndDatabase('test','work_efficiency_general');
+        $oAfrDb = DbActionFacade::withConnAliasAndDatabase('test','admin_new');
+        $aResults['dbGetCharsetAndCollation'] = $oAfrDb->dbGetCharsetAndCollation();
+    //    $aResults['dbGetTblList'] = $oAfrDb->dbGetTblList();
+    //    $aResults['dbGetTblListWithCharset'] = $oAfrDb->dbGetTblListWithCharset();
+        if($aResults['dbTblExists--admin_fee'] = $oAfrDb->dbTblExists('admin_fee')){
+            $aResults['dbGetTblCharsetAndCollation--admin_fee'] = $oAfrDb->dbGetTblCharsetAndCollation('admin_fee');
+            $aResults['dbShowCreateTable--admin_fee'] = $oAfrDb->dbShowCreateTable('admin_fee');
+        }
+        $aResults['dbTblExists--alup'] = $oAfrDb->dbTblExists('alup');
+
 
 
         $this->assertSame('x', 'y', print_r($aResults, true));

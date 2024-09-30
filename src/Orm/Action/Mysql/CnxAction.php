@@ -15,17 +15,6 @@ class CnxAction implements CnxActionInterface
 
 
     /**
-     * @throws AfrDatabaseConnectionException
-     */
-    protected function trimDbName(string &$sDbName, bool $bErrorOnEmpty)
-    {
-        $sDbName = trim($sDbName);
-        if ($bErrorOnEmpty && strlen($sDbName) < 1) {
-            throw new AfrDatabaseConnectionException('Database name is empty');
-        }
-    }
-
-    /**
      * @param string $sDbNameLike
      * @return array
      * @throws AfrDatabaseConnectionException
@@ -46,7 +35,7 @@ class CnxAction implements CnxActionInterface
      * @return array
      * @throws AfrDatabaseConnectionException
      */
-    public function cnxGetAllDatabaseNamesWithProperties(string $sDbNameLike = ''): array
+    public function cnxGetAllDatabaseNamesWithCharset(string $sDbNameLike = ''): array
     {
         $this->trimDbName($sDbNameLike, false);
 
@@ -55,6 +44,7 @@ class CnxAction implements CnxActionInterface
             strlen($sDbNameLike) ? ' WHERE `SCHEMA_NAME` LIKE ' . static::encapsulateCellValue($sDbNameLike) : ''
             ), 'SCHEMA_NAME');
         foreach ($aRows as &$aRow) {
+            $aRow[self::CON_ALIAS] = $this->getNameConnAlias();
             $aRow[self::DB_NAME] = $aRow['SCHEMA_NAME'];
             $aRow[self::CHARSET] = $aRow['DEFAULT_CHARACTER_SET_NAME'] ?? 'utf8';
             $aRow[self::COLLATION] = $aRow['DEFAULT_COLLATION_NAME'] ?? $aRow[self::CHARSET] . '_general_ci';
@@ -78,10 +68,10 @@ class CnxAction implements CnxActionInterface
      * @return array
      * @throws AfrDatabaseConnectionException
      */
-    public function cnxDbGetDefaultCharsetAndCollation(string $sDbName): array
+    public function cnxDbGetCharsetAndCollation(string $sDbName): array
     {
         $this->trimDbName($sDbName, true);
-        $aList = $this->cnxGetAllDatabaseNamesWithProperties($sDbName);
+        $aList = $this->cnxGetAllDatabaseNamesWithCharset($sDbName);
         return [
             static::DB_NAME => isset($aList[$sDbName]) ? $sDbName : null,
             static::CHARSET => $aList[$sDbName]['DEFAULT_CHARACTER_SET_NAME'] ?? null,
@@ -96,7 +86,7 @@ class CnxAction implements CnxActionInterface
      * @return bool
      * @throws AfrDatabaseConnectionException
      */
-    public function cnxDbSetDefaultCharsetAndCollation(string $sDbName, string $sCharset, string $sCollation = ''): bool
+    public function cnxDbSetCharsetAndCollation(string $sDbName, string $sCharset, string $sCollation = ''): bool
     {
         $this->trimDbName($sDbName, true);
         return $this->cnxCreateDatabaseUsingCharset($sDbName, $sCharset, $sCollation, [], true);
@@ -156,11 +146,10 @@ class CnxAction implements CnxActionInterface
                     break;
                 }
             }
-            if (!isset($aCollationList[$sCollate])) { //fallback
-                $sCharset = 'utf8';
-                $sCollate = 'utf8_general_ci';
-            }
-
+        }
+        if (!isset($aCollationList[$sCollate])) { //fallback
+            $sCharset = 'utf8';
+            $sCollate = 'utf8_general_ci';
         }
 
         //CREATE DATABASE IF NOT EXISTS `admin_new` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
@@ -242,7 +231,6 @@ class CnxAction implements CnxActionInterface
      */
     public function cnxGetAllCharsets(): array
     {
-        ///SHOW CHARACTER SET;
         return $this->getRowsValue(
             'SELECT CHARACTER_SET_NAME FROM `information_schema`.`CHARACTER_SETS` ORDER BY `CHARACTER_SET_NAME` DESC'
         );
@@ -267,7 +255,7 @@ class CnxAction implements CnxActionInterface
      */
     public function cnxSetConnectionCharsetAndCollation(
         string $sCharset = 'utf8mb4',
-        string $sCollation = 'utf8mb4_0900_ai_ci',
+        string $sCollation = 'utf8mb4_general_ci',
         bool   $character_set_server = true,
         bool   $character_set_database = false
     ): bool
@@ -343,12 +331,12 @@ class CnxAction implements CnxActionInterface
         //$iUTC+=60*16;
 
         $delta = $iUTC-time();
-
         $sign = $delta<0?'-':'+';
+        $iAbsDelta = intval(abs($delta));
 
-        $hours = floor(abs($delta) / 3600);
-
-        $minutes = floor((abs($delta) / 60) % 60);
+        $hours = (int)floor($iAbsDelta / 3600);
+        //Deprecated: Implicit conversion from float 179.98333333333332 to int loses precision in C:\xampp\htdocs\database\src\Orm\Action\Mysql\CnxAction.php on line 342
+        $minutes = (int)floor((int)($iAbsDelta / 60) % 60);
 
         $iSnapHourInto = max(min(abs($iSnapHourInto),60),1);//max 60 part as minutes
 
@@ -364,4 +352,5 @@ class CnxAction implements CnxActionInterface
             ($hours <=9 ? "0" . $hours : $hours).':'.
             ($minutes <=9 ? "0" . $minutes : $minutes);
     }
+
 }

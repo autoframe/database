@@ -2,24 +2,21 @@
 
 namespace Autoframe\Database\Orm\Action;
 
+use Autoframe\Database\Connection\AfrDbConnectionManager;
 use Autoframe\Database\Connection\Exception\AfrDatabaseConnectionException;
-use Autoframe\Database\Orm\Blueprint\AfrOrmBlueprintInterface;
 
-class CnxActionFacade //implements AfrOrmBlueprintInterface
+class CnxActionFacade
 {
-    use ResolveForFacade;
-
     /**
-     * @param string $sAlias
-     * @param string $sDialectClass
+     * @param string $sConnAlias
      * @return CnxActionInterface
      * @throws AfrDatabaseConnectionException
      */
-    public static function withConnAlias(string $sAlias, string $sDialectClass = ''): CnxActionInterface
+    public static function withConnAlias(string $sConnAlias): CnxActionInterface
     {
-        /** @var CnxActionInterface $sFQCN_Implementing_CnxActionInterface */
-        $sFQCN_Implementing_CnxActionInterface = static::resolveAlias($sAlias, $sDialectClass);
-        return $sFQCN_Implementing_CnxActionInterface::getInstanceWithConnAlias($sAlias);
+        /** @var CnxActionInterface $sFQCN */
+        $sFQCN = AfrDbConnectionManager::getInstance()->resolveFacadeUsingAlias(static::class, $sConnAlias);
+        return $sFQCN::getInstanceWithConnAlias($sConnAlias);
     }
 
 }

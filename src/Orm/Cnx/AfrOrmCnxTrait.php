@@ -45,7 +45,7 @@ trait AfrOrmCnxTrait
      */
     public static function _ORM_Cnx_Driver(): string
     {
-        return static::_ORM_Cnx_Manager()->driverType(static::_ORM_Cnx_Alias());
+        return static::_ORM_Cnx_Manager()->getDriverType(static::_ORM_Cnx_Alias());
     }
 
     /**

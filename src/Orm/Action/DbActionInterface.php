@@ -2,43 +2,103 @@
 
 namespace Autoframe\Database\Orm\Action;
 
+use Autoframe\Database\Connection\Exception\AfrDatabaseConnectionException;
 use Autoframe\Database\Orm\Blueprint\AfrOrmBlueprintInterface;
 
 interface DbActionInterface extends AfrOrmBlueprintInterface, EscapeInterface
 {
-// todo: de descompus / mutat din AfrOrmActionInterface \ use Doctrine\DBAL\Types\Types;
-//todo: https://stackoverflow.com/questions/2934258/how-do-i-get-the-current-time-zone-of-mysql
 
-    public function dXXbGetDefaultCharsetAndCollation(string $sDbName): array; //SHOW CHARACTER SET;
+    /**
+     * @param string $sConnAlias
+     * @param string $sDatabaseName
+     * @throws AfrDatabaseConnectionException
+     */
+    public static function getInstanceWithConnAliasAndDatabase(
+        string $sConnAlias,
+        string $sDatabaseName
+    );
 
-    public function dXXbSetDefaultCharsetAndCollation(string $sDbName, string $sCharset, string $sCollation = ''): bool;
+    public static function getInstanceUsingCnxiAndDatabase(
+        CnxActionInterface $oCnxActionInterface,
+        string $sDatabaseName
+    );
+    public function getInstanceConnAlias():CnxActionInterface;
 
-//https://www.db4free.net/
+    public function getNameConnAlias(): string; //singleton info
+    public function getNameDatabase(): string; //singleton info
 
+    /**
+     * CnxActionInterface -> cnxDbGetCharsetAndCollation(string $sDbName): array;
+     * @return array
+     */
+    public function dbGetCharsetAndCollation(): array;
 
+    /**
+     * CnxActionInterface -> cnxDbSetCharsetAndCollation(string $sDbName, string $sCharset, string $sCollation = ''): bool;
+     * @param string $sCharset
+     * @param string $sCollation
+     * @return bool
+     */
+    public function dbSetCharsetAndCollation(string $sCharset, string $sCollation = ''): bool;
 
 
     /** Poate fac aici o singura metoda cu cheia sa fie numele db-ului la returen */
-    public static function tblListAll(string $sDbFrom, string $sLike = ''): array;
-    public static function tblListAllWithProperties(string $sDbFrom, string $sLike = ''): array;
-
-    public static function tblExists(string $sTblName, string $sDbName): bool;
-    public static function tblGetDefaultCharsetAndCollation(string $sTblName,string $sDbName): array; //SHOW CHARACTER SET;
-    public static function tblSetDefaultCharsetAndCollation(string $sTblName,string $sDbName, string $sCharset, string $sCollation = ''): bool;
+    public function dbGetTblList(string $sLike = ''): array;
 
 
-    public static function tblCreate(string $sTblName,string $sInsideDbName, array $aOptions = []): bool;
-    // SHOW CREATE DATABASE|TABLE ****
-    // CREATE DATABASE `testswmb4` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_swedish_ci */
-    public static function tblCreateCharset(
+    /** CnxAction::cnxGetAllDatabaseNamesWithCharset()
+     * $aRow[self::CON_ALIAS] = $this->getNameConnAlias();
+     * $aRow[self::DB_NAME] = $aRow['SCHEMA_NAME'];
+     * $aRow[self::CHARSET] = $aRow['DEFAULT_CHARACTER_SET_NAME'] ?? 'utf8';
+     * $aRow[self::COLLATION] = $aRow['DEFAULT_COLLATION_NAME'] ?? $aRow[self::CHARSET] . '_general_ci';
+ */
+    public function dbGetTblListWithCharset(string $sLike = ''): array;
+
+    /**
+     * @param string $sTblName
+     * @return string
+     */
+    public function dbShowCreateTable(string $sTblName): string;
+
+    public function dbTblExists(string $sTblName): bool;
+
+    public function dbGetTblCharsetAndCollation(string $sTblName): array;
+    public function dbSetTblCharsetAndCollation(string $sTblName, string $sCharset, string $sCollation = ''): bool;
+
+
+    // SHOW CREATE TABLE ****
+    public function dbCreateTbl(
         string $sTblName,
-        string $sInsideDbName,
-        string $sCharset = 'utf8',
-        string $sCollate = 'utf8_general_ci',
+        string $sCharset = 'utf8mb4',
+        string $sCollate = 'utf8mb4_general_ci', //todo: _900_ai_ci  compatibility
         array  $aOptions = []
     ): bool;
-    public static function tblRename(string $sTblFrom, string $sTblTo, string $sDbFrom, string $sDbTo = '' ): bool;
-    public static function tblMoveTableFromDb1ToDb2(string $sTableName, string $sDbFrom, string $sDbTo): bool;
-    public static function tblCopyTable(string $sTableNameFrom, string $sTableNameTo, string $sDbFrom, string $sDbTo = ''): bool;
+    public function dbRenameTbl(string $sTblFrom, string $sTblTo): bool;
+
+    //todo: cross tech implementation
+    /**
+     * @param string $sTableNameFrom
+     * @param string $sTableNameTo
+     * @param string|object|null $mOtherDatabase
+     * @return bool
+     */
+    public function dbCopyTable(
+        string $sTableNameFrom,
+        string $sTableNameTo,
+        $mOtherDatabase = null
+    ): bool;
+
+
+    //todo: cross tech implementation like create, copy populate, remove old tbl on success
+    /**
+     * @param string $sTableName
+     * @param string|object $mOtherDatabase
+     * @return bool
+     */
+    public function dbMoveTableToOtherDatabase(string $sTableName, $mOtherDatabase): bool;
+
+    public function dbEmptyTable(string $sTableName): bool;
+    public function dbDropTable(string $sTableName): bool;
 
 }
+

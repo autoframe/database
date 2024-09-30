@@ -2,21 +2,26 @@
 
 namespace Autoframe\Database\Orm\Action;
 
+use Autoframe\Database\Connection\AfrDbConnectionManager;
 use \Autoframe\Database\Connection\Exception\AfrDatabaseConnectionException;
 
 trait CnxActionSingletonTrait
 {
-    /**
-     * The actual singleton's instance almost always resides inside a static
-     * field. In this case, the static field is an array, where each subclass of
-     * the Singleton stores its own instance.
-     */
     protected static array $instances = [];
     protected string $sConnAlias;
 
     public function getNameConnAlias(): string
     {
         return $this->sConnAlias;
+    }
+
+    /**
+     * @return string
+     * @throws AfrDatabaseConnectionException
+     */
+    public function getNameDriver(): string
+    {
+        return AfrDbConnectionManager::getInstance()->getDriverType($this->sConnAlias);
     }
 
     /**

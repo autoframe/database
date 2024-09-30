@@ -2,6 +2,8 @@
 
 namespace Autoframe\Database\Orm\Action;
 
+use Autoframe\Database\Connection\Exception\AfrDatabaseConnectionException;
+
 trait RowHelperTrait
 {
 
@@ -40,6 +42,37 @@ trait RowHelperTrait
         }
 
         return $traversable;
+    }
+
+    /**
+     * @throws AfrDatabaseConnectionException
+     */
+    protected function trimDbName(string &$sDbName, bool $bErrorOnEmpty):void
+    {
+        $sDbName = trim($sDbName);
+        if ($bErrorOnEmpty && strlen($sDbName) < 1) {
+            throw new AfrDatabaseConnectionException('Database name is empty');
+        }
+    }
+
+    /**
+     * @throws AfrDatabaseConnectionException
+     */
+    protected function trimTblName(string &$sTblName, bool $bErrorOnEmpty):void
+    {
+        $sTblName = trim($sTblName);
+        if ($bErrorOnEmpty && strlen($sTblName) < 1) {
+            throw new AfrDatabaseConnectionException('Table name is empty');
+        }
+    }  /**
+     * @throws AfrDatabaseConnectionException
+     */
+    protected function trimCellName(string &$sCellName, bool $bErrorOnEmpty):void
+    {
+        $sCellName = trim($sCellName);
+        if ($bErrorOnEmpty && strlen($sCellName) < 1) {
+            throw new AfrDatabaseConnectionException('Cell name is empty');
+        }
     }
 
 }

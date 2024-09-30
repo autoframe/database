@@ -7,15 +7,19 @@ use Autoframe\Database\Orm\Blueprint\AfrOrmBlueprintInterface;
 
 interface CnxActionInterface extends AfrOrmBlueprintInterface, EscapeInterface
 {
-// todo: de descompus / mutat din AfrOrmActionInterface \ use Doctrine\DBAL\Types\Types;
-
 
     /**
      * @param string $sAlias
+     * @return self
      * @throws AfrDatabaseConnectionException
      */
-    public static function getInstanceWithConnAlias(string $sAlias);
+    public static function getInstanceWithConnAlias(string $sAlias): self;
 
+    /**
+     * @return string
+     * @throws AfrDatabaseConnectionException
+     */
+    public function getNameDriver(): string; //from cnx manager
     public function getNameConnAlias(): string; //singleton info
 
     /**
@@ -30,14 +34,14 @@ interface CnxActionInterface extends AfrOrmBlueprintInterface, EscapeInterface
      * @return array
      * @throws AfrDatabaseConnectionException
      */
-    public function cnxGetAllDatabaseNamesWithProperties(string $sDbNameLike = ''): array;
+    public function cnxGetAllDatabaseNamesWithCharset(string $sDbNameLike = ''): array;
 
 
     public function cnxDatabaseExists(string $sDbName): bool;
 
-    public function cnxDbGetDefaultCharsetAndCollation(string $sDbName): array; //SHOW CHARACTER SET;
+    public function cnxDbGetCharsetAndCollation(string $sDbName): array;
 
-    public function cnxDbSetDefaultCharsetAndCollation(string $sDbName, string $sCharset, string $sCollation = ''): bool;
+    public function cnxDbSetCharsetAndCollation(string $sDbName, string $sCharset, string $sCollation = ''): bool;
 
 
     public function cnxCreateDatabaseUsingDefaultCharset(string $sDbName, array $aOptions = [], bool $bIfNotExists = false): bool;
@@ -66,7 +70,7 @@ interface CnxActionInterface extends AfrOrmBlueprintInterface, EscapeInterface
      * @return array An array of character set names.
      * @throws AfrDatabaseConnectionException If there is an error connecting to the database.
      */
-    public function cnxGetAllCharsets(): array; //SHOW CHARACTER SET;     //SELECT * FROM `information_schema`.`CHARACTER_SETS` ORDER BY `CHARACTER_SETS`.`CHARACTER_SET_NAME` DESC;
+    public function cnxGetAllCharsets(): array;  //SELECT * FROM `information_schema`.`CHARACTER_SETS` ORDER BY `CHARACTER_SETS`.`CHARACTER_SET_NAME` DESC;
 
     /**
      * Retrieves all the collations from the database.
@@ -77,7 +81,7 @@ interface CnxActionInterface extends AfrOrmBlueprintInterface, EscapeInterface
     public function cnxGetAllCollations(): array; //SHOW COLLATION     //SELECT * FROM `information_schema`.`CHARACTER_SETS` ORDER BY `CHARACTER_SETS`.`CHARACTER_SET_NAME` DESC;
 
     public function cnxSetConnectionCharsetAndCollation(string $sCharset = 'utf8mb4',
-                                                        string $sCollation = 'utf8mb4_0900_ai_ci',
+                                                        string $sCollation = 'utf8mb4_general_ci',
                                                         bool   $character_set_server = true,
                                                         bool   $character_set_database = false
     ): bool;

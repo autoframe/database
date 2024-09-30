@@ -124,10 +124,22 @@ class AfrDbConnectionManager extends AfrSingletonAbstractClass implements AfrDbC
 
         if (strpos($sDSN, static::FQCN_PDO)) {
             $aFQCN_PDO = explode(static::FQCN_PDO, $sDSN);
-            $sDSN = trim($aFQCN_PDO[0], '; ');
-            $sPdoClass = trim($aFQCN_PDO[1], ';=:&');
+            $aPdoClass = explode(';', $aFQCN_PDO[1]);
+            $sPdoClass = trim($aPdoClass[0], ';=:& ');
+            $aPdoClass[0] = rtrim($aFQCN_PDO[0],'; ');//replace with dsn
+            $sDSN = implode(';', $aPdoClass);
         } else {
             $sPdoClass = '\PDO';
+        }
+
+        if (strpos($sDSN, static::CUSTOM_DIALECT_CNX_NS)) {
+            $aDsn = explode(static::CUSTOM_DIALECT_CNX_NS, $sDSN);
+            $aCustomDialect = explode(';', $aDsn[1]);
+            $sDialectOrmActionNamespace = trim($aCustomDialect[0], ';=:& ');
+            $aCustomDialect[0] = rtrim($aDsn[0],'; ');//replace with dsn
+            $sDSN = implode(';', $aCustomDialect);
+        } else {
+            $sDialectOrmActionNamespace = '';
         }
 
         $aInfo = $this->parseDSNInfo($sDSN);
@@ -142,6 +154,7 @@ class AfrDbConnectionManager extends AfrSingletonAbstractClass implements AfrDbC
             static::PDO_INSTANCE_KEY => $this->getConnectionIndex($aInfo),
             static::CLOSURE => null,
             static::FQCN_PDO => $sPdoClass,
+            static::CUSTOM_DIALECT_CNX_NS => $sDialectOrmActionNamespace,
         ];
         return $this;
     }
@@ -150,10 +163,11 @@ class AfrDbConnectionManager extends AfrSingletonAbstractClass implements AfrDbC
      * @param string $sAlias
      * @param PDO $pdo
      * @param string $sDriver Types: mysql, sqlite, pgsql, mssql, cubrid, sybase, dblib, firebird, ibm, informix, oci, odbc
+     * @param string $sDialectOrmActionNamespace
      * @return void
      * @throws AfrDatabaseConnectionException
      */
-    public function defineConnectionAliasUsingPDOInstance(string $sAlias, PDO $pdo, string $sDriver): AfrDbConnectionManagerInterface
+    public function defineConnectionAliasUsingPDOInstance(string $sAlias, PDO $pdo, string $sDriver, string $sDialectOrmActionNamespace = ''): AfrDbConnectionManagerInterface
     {
         if (empty($sAlias)) {
             throw new AfrDatabaseConnectionException('Please provide a database connection namespace!');
@@ -176,6 +190,8 @@ class AfrDbConnectionManager extends AfrSingletonAbstractClass implements AfrDbC
             static::PDO_INSTANCE_KEY => $this->getConnectionIndex($aInfo),
             static::CLOSURE => null,
             static::FQCN_PDO => get_class($pdo),
+            static::CUSTOM_DIALECT_CNX_NS => $sDialectOrmActionNamespace,
+
         ];
         $this->aConnections[$this->aAliases[$sAlias][static::PDO_INSTANCE_KEY]] = $pdo;
         return $this;
@@ -206,6 +222,26 @@ class AfrDbConnectionManager extends AfrSingletonAbstractClass implements AfrDbC
         }
 
         $this->aAliases[$sAlias][static::CLOSURE] = $oClosure->bindTo($this, $this);
+        return $this;
+    }
+
+    /**
+     * @param string $sAlias
+     * @param string $sDialectOrmActionNamespace
+     * @return AfrDbConnectionManagerInterface
+     * @throws AfrDatabaseConnectionException
+     */
+    public function defineCustomDialectCnxNs(
+        string  $sAlias,
+        string $sDialectOrmActionNamespace
+    ): AfrDbConnectionManagerInterface
+    {
+        if (!isset($this->aAliases[$sAlias])) {
+            throw new AfrDatabaseConnectionException(
+                'Unknown connection alis: ' . $sAlias
+            );
+        }
+        $this->aAliases[$sAlias][static::CUSTOM_DIALECT_CNX_NS] = $sDialectOrmActionNamespace;
         return $this;
     }
 
@@ -262,7 +298,7 @@ class AfrDbConnectionManager extends AfrSingletonAbstractClass implements AfrDbC
      * @return string Types: mysql, sqlite, pgsql, mssql, cubrid, sybase, dblib, firebird, ibm, informix, oci, odbc
      * @throws AfrDatabaseConnectionException
      */
-    public function driverType(string $sAlias): string
+    public function getDriverType(string $sAlias): string
     {
         if (!isset($this->aAliases[$sAlias][static::INFO][static::DRIVER])) {
             throw new AfrDatabaseConnectionException(
@@ -270,6 +306,21 @@ class AfrDbConnectionManager extends AfrSingletonAbstractClass implements AfrDbC
             );
         }
         return $this->aAliases[$sAlias][static::INFO][static::DRIVER];
+    }
+
+    /**
+     * @param string $sAlias
+     * @return string
+     * @throws AfrDatabaseConnectionException
+     */
+    public function getCustomDialectCnxNs(string $sAlias): string
+    {
+        if (!isset($this->aAliases[$sAlias][static::CUSTOM_DIALECT_CNX_NS])) {
+            throw new AfrDatabaseConnectionException(
+                'Unknown Dialect Cnx Ns for connection alis: ' . $sAlias
+            );
+        }
+        return $this->aAliases[$sAlias][static::CUSTOM_DIALECT_CNX_NS];
     }
 
 
@@ -447,6 +498,33 @@ class AfrDbConnectionManager extends AfrSingletonAbstractClass implements AfrDbC
         }
 
         return $this->aConnections[$aConfig[static::PDO_INSTANCE_KEY]];
+    }
+
+
+    /**
+     * @param string $sStaticClass
+     * @param string $sAlias
+     * @return string
+     * @throws AfrDatabaseConnectionException
+     */
+    public function resolveFacadeUsingAlias(string $sStaticClass, string $sAlias): string
+    {
+        $iSplit = (int)strrpos($sStaticClass, '\\');
+        $sClassToCall = substr($sStaticClass, $iSplit + 1);
+        if (substr($sClassToCall, -6, 6) === 'Facade') {
+            $sClassToCall = substr($sClassToCall, 0, -6);// remove `Facade` from FQCN
+        }
+
+        //string The fully qualified namespace for the database custom dialect.
+        $sDialectOrmActionNamespace = $this->getCustomDialectCnxNs($sAlias);
+        if (empty($sDialectOrmActionNamespace)) {
+            // string Types: mysql, sqlite, pgsql, mssql, cubrid, sybase, dblib, firebird, ibm, informix, oci, odbc
+            $sDialect = $this->getDriverType($sAlias);
+            return
+                substr($sStaticClass, 0, $iSplit + 1) . // __NAMESPACE__\
+                ucwords($sDialect) . '\\' . $sClassToCall;
+        }
+        return rtrim($sDialectOrmActionNamespace, '\\') . '\\' . $sClassToCall;
     }
 
 

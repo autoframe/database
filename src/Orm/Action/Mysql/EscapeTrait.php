@@ -28,6 +28,11 @@ trait EscapeTrait
         }
         return "'" . str_replace(["'", '\\'], ["''", '\\\\'], (string)$mData) . "'";
     }
+    public static function q($mData, bool $bForceEncapsulateAsString = false){
+        return static::encapsulateCellValue($mData, $bForceEncapsulateAsString);
+    }
+
+
 
     public function escapeDbName(string $sDatabaseName): string
     {

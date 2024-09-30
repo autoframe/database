@@ -7,8 +7,6 @@ use Autoframe\Database\Orm\Exception\AfrOrmException;
 
 interface ConvertInterface extends AfrOrmBlueprintInterface #, CnxActionSingletonInterface
 {
-// todo: de descompus / mutat din AfrOrmActionInterface \ use Doctrine\DBAL\Types\Types;
-
     /**
      * @throws AfrOrmException
      */
