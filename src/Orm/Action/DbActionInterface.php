@@ -22,19 +22,19 @@ interface DbActionInterface extends AfrOrmBlueprintInterface, EscapeInterface
         CnxActionInterface $oCnxActionInterface,
         string $sDatabaseName
     );
-    public function getInstanceConnAlias():CnxActionInterface;
+    public function getConnexionInstance():CnxActionInterface;
 
     public function getNameConnAlias(): string; //singleton info
     public function getNameDatabase(): string; //singleton info
 
     /**
-     * CnxActionInterface -> cnxDbGetCharsetAndCollation(string $sDbName): array;
+     * CnxActionInterface -> cnxGetDatabaseCharsetAndCollation(string $sDbName): array;
      * @return array
      */
     public function dbGetCharsetAndCollation(): array;
 
     /**
-     * CnxActionInterface -> cnxDbSetCharsetAndCollation(string $sDbName, string $sCharset, string $sCollation = ''): bool;
+     * CnxActionInterface -> cnxSetDatabaseCharsetAndCollation(string $sDbName, string $sCharset, string $sCollation = ''): bool;
      * @param string $sCharset
      * @param string $sCollation
      * @return bool
@@ -99,6 +99,26 @@ interface DbActionInterface extends AfrOrmBlueprintInterface, EscapeInterface
 
     public function dbEmptyTable(string $sTableName): bool;
     public function dbDropTable(string $sTableName): bool;
+
+    /**
+     * DESCRIBE db.tablename
+     * @param string $sTableName
+     * @return array
+     * @throws AfrDatabaseConnectionException
+     */
+    public function dbDescribeTable(string $sTableName): array;
+
+    /**
+     * SHOW INDEX FROM `db`.`tbl`
+     * @param string $sTableName
+     * @return array
+     * @throws AfrDatabaseConnectionException
+ */
+    public function dbShowIndexFromTable(string $sTableName): array;
+
+
+    public function pdoInteract(): PdoInteractInterface;
+
 
 }
 

@@ -11,7 +11,8 @@
         "ext-pdo": "*",
         "doctrine/orm": "*",
         "autoframe/cli-tools": "^1.0",
-        "ext-json": "*"
+        "ext-json": "*",
+        "autoframe/components-arr": "^2.0"
     },
     "version": "1.0.0",
     "authors": [

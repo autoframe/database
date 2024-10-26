@@ -3,159 +3,157 @@ declare(strict_types=1);
 
 namespace Unit;
 
-use Autoframe\Database\Connection\AfrDbConnectionManager;
+use Autoframe\Database\Connection\AfrDbConnectionManagerFacade;
 use Autoframe\Database\Orm\Action\DbActionFacade;
 use Autoframe\Database\Orm\Action\Mysql\Convert;
 use Autoframe\Database\Orm\Action\ConvertFacade as ConvertSwitch;
+use Autoframe\Database\Orm\Action\OrmTypeDescriptor;
 use PHPUnit\Framework\TestCase;
 use Autoframe\Database\Orm\Action\CnxActionFacade;
 
 class AfrOrmHelperTest extends TestCase
 {
 
-    public static function insideProductionVendorDir(): bool
-    {
-        return strpos(__DIR__, DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR) !== false;
-    }
+	public static function insideProductionVendorDir(): bool
+	{
+		return strpos(__DIR__, DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR) !== false;
+	}
 
-    protected function setUp(): void
-    {
+	protected function setUp(): void {}
 
-    }
+	protected function tearDown(): void
+	{
+		//cleanup between tests for static
+	}
 
-    protected function tearDown(): void
-    {
-        //cleanup between tests for static
-    }
-
-    public static function extractQuotProvider(): array
-    {
-        echo __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
-        return [
-            [
-                "'test'  ",
-                "'",
-                0,
-                'mysql',
-                [
-                    Convert::QUOTED => "'test'",
-                    Convert::COL => 'test',
-                    Convert::END_OFFSET => 5,
-                ]
-            ], [
-                " 'test'  ",
-                "'",
-                1,
-                'mysql',
-                [
-                    Convert::QUOTED => "'test'",
-                    Convert::COL => 'test',
-                    Convert::END_OFFSET => 6,
-                ]
-            ],
-            [
-                ' "x"',
-                "",
-                1,
-                'mysql',
-                [
-                    Convert::QUOTED =>  '"x"',
-                    Convert::COL => 'x',
-                    Convert::END_OFFSET => 3,
-                ]
-            ],
-            [
-                "''",
-                "",
-                0,
-                'mysql',
-                [
-                    Convert::QUOTED =>  "''",
-                    Convert::COL => '',
-                    Convert::END_OFFSET => 1,
-                ]
-            ],
-            [
-                "'te''st'  ",
-                "'",
-                0,
-                'mysql',
-                [
-                    Convert::QUOTED => "'te''st'",
-                    Convert::COL => 'te\'st',
-                    Convert::END_OFFSET => 7,
-                ]
-            ],
-            [
-                "'te\'st'  ",
-                "'",
-                0,
-                'mysql',
-                [
-                    Convert::QUOTED => "'te\'st'",
-                    Convert::COL => 'te\'st',
-                    Convert::END_OFFSET => 7,
-                ]
-            ],
-            [
-                "`te\`st`  ",
-                "`",
-                0,
-                'mysql',
-                [
-                    Convert::QUOTED => "`te\`st`",
-                    Convert::COL => 'te`st',
-                    Convert::END_OFFSET => 7,
-                ]
-            ],
-            [
-                "```\``  ",
-                "`",
-                0,
-                'mysql',
-                [
-                    Convert::QUOTED => "```\``",
-                    Convert::COL => '``',
-                    Convert::END_OFFSET => 5,
-                ]
-            ],
-            [
-                '`c\\\\Slashes\n\rNL\tT`',
-                "`",
-                0,
-                'mysql',
-                [
-                    Convert::QUOTED => '`c\\\\Slashes\n\rNL\tT`',
-                    Convert::COL => "c\\Slashes\n\rNL\tT",
-                    Convert::END_OFFSET => 20,
-                ]
-            ],
-        ];
-    }
+	public static function extractQuotProvider(): array
+	{
+		echo __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
+		return [
+			[
+				"'test'  ",
+				"'",
+				0,
+				'mysql',
+				[
+					Convert::QUOTED => "'test'",
+					Convert::COL_NAME => 'test',
+					Convert::END_OFFSET => 5,
+				]
+			], [
+				" 'test'  ",
+				"'",
+				1,
+				'mysql',
+				[
+					Convert::QUOTED => "'test'",
+					Convert::COL_NAME => 'test',
+					Convert::END_OFFSET => 6,
+				]
+			],
+			[
+				' "x"',
+				"",
+				1,
+				'mysql',
+				[
+					Convert::QUOTED => '"x"',
+					Convert::COL_NAME => 'x',
+					Convert::END_OFFSET => 3,
+				]
+			],
+			[
+				"''",
+				"",
+				0,
+				'mysql',
+				[
+					Convert::QUOTED => "''",
+					Convert::COL_NAME => '',
+					Convert::END_OFFSET => 1,
+				]
+			],
+			[
+				"'te''st'  ",
+				"'",
+				0,
+				'mysql',
+				[
+					Convert::QUOTED => "'te''st'",
+					Convert::COL_NAME => 'te\'st',
+					Convert::END_OFFSET => 7,
+				]
+			],
+			[
+				"'te\'st'  ",
+				"'",
+				0,
+				'mysql',
+				[
+					Convert::QUOTED => "'te\'st'",
+					Convert::COL_NAME => 'te\'st',
+					Convert::END_OFFSET => 7,
+				]
+			],
+			[
+				"`te\`st`  ",
+				"`",
+				0,
+				'mysql',
+				[
+					Convert::QUOTED => "`te\`st`",
+					Convert::COL_NAME => 'te`st',
+					Convert::END_OFFSET => 7,
+				]
+			],
+			[
+				"```\``  ",
+				"`",
+				0,
+				'mysql',
+				[
+					Convert::QUOTED => "```\``",
+					Convert::COL_NAME => '``',
+					Convert::END_OFFSET => 5,
+				]
+			],
+			[
+				'`c\\\\Slashes\n\rNL\tT`',
+				"`",
+				0,
+				'mysql',
+				[
+					Convert::QUOTED => '`c\\\\Slashes\n\rNL\tT`',
+					Convert::COL_NAME => "c\\Slashes\n\rNL\tT",
+					Convert::END_OFFSET => 20,
+				]
+			],
+		];
+	}
 
 
-    /**
-     * @test
-     * @dataProvider extractQuotProvider
-     */
-    public function extractQuotTest(string $sText,
-                            string $sQuot,
-                            int    $iStartOffset,
-                            string $sDialect,
-                            array  $aReturnExpected
-    ): void
-    {
-        $aReturnActual = Convert::parseExtractQuotedValue($sText, $sQuot, $iStartOffset, $sDialect);
-        $this->assertSame($aReturnExpected, $aReturnActual, print_r([$aReturnActual, func_get_args()], true));
+	/**
+	 * @test
+	 * @dataProvider extractQuotProvider
+	 */
+	public function extractQuotTest(string $sText,
+	                                string $sQuot,
+	                                int    $iStartOffset,
+	                                string $sDialect,
+	                                array  $aReturnExpected
+	): void
+	{
+		$aReturnActual = Convert::parseExtractQuotedValue($sText, $sQuot, $iStartOffset, $sDialect);
+		$this->assertSame($aReturnExpected, $aReturnActual, print_r([$aReturnActual, func_get_args()], true));
 
-    }
+	}
 
 
-    public static function parseCreateTableProvider(): array
-    {
-        echo __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
-        return [[
-            "  /*
+	public static function parseCreateTableProvider(): array
+	{
+		echo __CLASS__ . '->' . __FUNCTION__ . PHP_EOL;
+		return [[
+			"  /*
      *  #1075 - Incorrect table definition; there can be only one auto column and it must be defined as a key
      *  #3719 'utf8' is currently an alias for the character set UTF8MB3, but will be an alias for UTF8MB4 in a future release. Please consider using UTF8MB4 in order to be unambiguous.
      *  #1681 Integer display width is deprecated and will be removed in a future release.   ADICA INT fara paranteze. se merge pe auto */
@@ -204,74 +202,82 @@ class AfrOrmHelperTest extends TestCase
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COMMENT='yha-c\\\\om''ment!' 
      * */
 "
-            //ALTER TABLE `fluentdb`.`muta#ble` DROP INDEX `2b_smallint`, ADD INDEX `2b_smallint` (`2b_smallint`, `date`) USING BTREE;
-        ]];
-    }
+			//ALTER TABLE `fluentdb`.`muta#ble` DROP INDEX `2b_smallint`, ADD INDEX `2b_smallint` (`2b_smallint`, `date`) USING BTREE;
+		]];
+	}
 
-    /**
-     * @test
-     * @dataProvider parseCreateTableProvider
-     */
-    public function parseCreateTableTest(string $sSQL): void
-    {
-        $this->assertSame('x', 'x'); return;
+	/**
+	 * @test
+	 * @dataProvider parseCreateTableProvider
+	 */
+	public function parseCreateTableTest(string $sSQL): void
+	{
+		$this->assertSame('x', 'x');
+		return;
 
-        ConvertSwitch::withDialect('mysql');
-        $aReturnActual = ConvertSwitch::parseCreateTableBlueprint($sSQL);
-        $aReturnActualQ = ConvertSwitch::blueprintToTableSql($aReturnActual);
-        $aReturnActualQ = ConvertSwitch::parseCreatDatabaseBlueprint('');
-        $p=AfrDbConnectionManager::getInstance()->dataLayerPath();
-   //     $aReturnActual = '['.gettype('').'] ('.gettype(null).')';
-        $this->assertSame('x', 'y', print_r([$p,$aReturnActualQ,$aReturnActual], true));
+		ConvertSwitch::withDialect('mysql');
+		$aReturnActual = ConvertSwitch::parseCreateTableBlueprint($sSQL);
+		$aReturnActualQ = ConvertSwitch::blueprintToTableSql($aReturnActual);
+		$aReturnActualQ = ConvertSwitch::parseCreatDatabaseBlueprint('');
+		$p = AfrDbConnectionManagerFacade::getInstance()->dataLayerPath();
+		//     $aReturnActual = '['.gettype('').'] ('.gettype(null).')';
+		$this->assertSame('x', 'y', print_r([$p, $aReturnActualQ, $aReturnActual], true));
 
-    }
+	}
 
 
-    /**
-     * @test
-     */
-    public function CnxActionFacadeTest(): void
-    {
-        //https://www.db4free.net/
+	/**
+	 * @test
+	 */
+	public function CnxActionFacadeTest(): void
+	{
+		//https://www.db4free.net/
 
-        $aResults = [];
-        AfrDbConnectionManager::getInstance()->defineConnectionAlias(
-            'test',
-            "mysql:host=192.168.0.21",
-            //"mysql:host=192.168.0.21;charset=utf8mb4",
-            "git",
-            "1234"
-        );
-        $oAfrCnx = CnxActionFacade::withConnAlias('test');
+		$aResults = [];
+		AfrDbConnectionManagerFacade::getInstance()->defineConnectionAlias(
+			'test',
+			"mysql:host=192.168.0.21",
+			//"mysql:host=192.168.0.21;charset=utf8mb4",
+			"git",
+			"1234"
+		);
+		$oAfrCnx = CnxActionFacade::withConnAlias('test');
 //        $aResults['cnxGetAllDatabaseNames'] = $oAfrCnx->cnxGetAllDatabaseNames();
 //        $aResults['cnxGetAllDatabaseNames-%dmin%'] = $oAfrCnx->cnxGetAllDatabaseNames('%dmin%');
-        $aResults['cnxGetAllDatabaseNamesWithCharset'] = $oAfrCnx->cnxGetAllDatabaseNamesWithCharset();
+		$aResults['cnxGetAllDatabaseNamesWithCharset'] = $oAfrCnx->cnxGetAllDatabaseNamesWithCharset();
+		$aResults['cnxGetConnectionCharsetAndCollation'] = $oAfrCnx->cnxGetConnectionCharsetAndCollation();
 //        $aResults['cnxDatabaseExists-dms'] = $oAfrCnx->cnxDatabaseExists('dms');
 //        $aResults['cnxDatabaseExists-dmsX'] = $oAfrCnx->cnxDatabaseExists('dmsX');
-        $aResults['cnxDbGetCharsetAndCollation-admin_new'] = $oAfrCnx->cnxDbGetCharsetAndCollation('admin_new');
-        $aResults['charsetsX'] = AfrDbConnectionManager::getInstance()->getAliasInfo('test');
-//        $aResults['cnxDbSetCharsetAndCollation-admin_new'] = $oAfrCnx->cnxDbSetCharsetAndCollation('admin_new','utf8mb4');
+		$aResults['cnxGetDatabaseCharsetAndCollation-admin_new'] = $oAfrCnx->cnxGetDatabaseCharsetAndCollation('admin_new');
+		$aResults['charsetsX'] = AfrDbConnectionManagerFacade::getInstance()->getAliasInfo('test');
+//        $aResults['cnxSetDatabaseCharsetAndCollation-admin_new'] = $oAfrCnx->cnxSetDatabaseCharsetAndCollation('admin_new','utf8mb4');
 //        $aResults['cnxCreateDatabaseUsingDefaultCharset'] = $oAfrCnx->cnxCreateDatabaseUsingDefaultCharset('cnxCreateDatabaseUsingDefaultCharset'.time());
 //        $aResults['cnxCreateDatabaseUsingCharset'] = $oAfrCnx->cnxCreateDatabaseUsingCharset('cnxCreateDatabaseUsingCharset'.time());
-//        $aResults['cnxGetAllCollationCharsets'] = $oAfrCnx->cnxGetAllCollationCharsets();
-//        $aResults['cnxGetAllCollationCharsets-utf8%general_ci'] = $oAfrCnx->cnxGetAllCollationCharsets('utf8%general_ci',false);
-        $aResults['cnxGetTimezone'] = $oAfrCnx->cnxGetTimezone();
+		$aResults['cnxGetAllCollationCharsets'] = $oAfrCnx->cnxGetAllCollationCharsets();
+		$aResults['cnxGetAllCollationCharsets-utf8%general_ci'] = $oAfrCnx->cnxGetAllCollationCharsets('utf8%general_ci', false);
+		$aResults['cnxGetTimezone'] = $oAfrCnx->cnxGetTimezone();
 
-        $aResults = [];
+		//    $aResults = [];
 //        $oAfrDb = DbActionFacade::withConnAliasAndDatabase('test','work_efficiency_general');
-        $oAfrDb = DbActionFacade::withConnAliasAndDatabase('test','admin_new');
-        $aResults['dbGetCharsetAndCollation'] = $oAfrDb->dbGetCharsetAndCollation();
-    //    $aResults['dbGetTblList'] = $oAfrDb->dbGetTblList();
-    //    $aResults['dbGetTblListWithCharset'] = $oAfrDb->dbGetTblListWithCharset();
-        if($aResults['dbTblExists--admin_fee'] = $oAfrDb->dbTblExists('admin_fee')){
-            $aResults['dbGetTblCharsetAndCollation--admin_fee'] = $oAfrDb->dbGetTblCharsetAndCollation('admin_fee');
-            $aResults['dbShowCreateTable--admin_fee'] = $oAfrDb->dbShowCreateTable('admin_fee');
-        }
-        $aResults['dbTblExists--alup'] = $oAfrDb->dbTblExists('alup');
+		$oAfrDb = DbActionFacade::withConnAliasAndDatabase('test', 'admin_new');
+		$aResults['dbGetCharsetAndCollation'] = $oAfrDb->dbGetCharsetAndCollation();
+		//    $aResults['dbGetTblList'] = $oAfrDb->dbGetTblList();
+		//    $aResults['dbGetTblListWithCharset'] = $oAfrDb->dbGetTblListWithCharset();
+		if ($aResults['dbTblExists--admin_fee'] = $oAfrDb->dbTblExists('admin_fee')) {
+			$aResults['dbGetTblCharsetAndCollation--admin_fee'] = $oAfrDb->dbGetTblCharsetAndCollation('admin_fee');
+			$aResults['dbShowCreateTable--admin_fee'] = $oAfrDb->dbShowCreateTable('admin_fee');
+		}
+		$aResults['dbTblExists--alup'] = $oAfrDb->dbTblExists('alup');
 
+		$x = microtime(true);
+		//$aResults = OrmTypeDescriptor::getInstance()->makeCnx($oAfrCnx,true, true);
 
+		//  OrmTypeDescriptor::getInstance()->makeCnx($oAfrCnx,true, true);
+		OrmTypeDescriptor::getInstance();
 
-        $this->assertSame('x', 'y', print_r($aResults, true));
+		$aResults = number_format(microtime(true) - $x, 3);
 
-    }
+		$this->assertSame('x', 'y', print_r($aResults, true));
+
+	}
 }

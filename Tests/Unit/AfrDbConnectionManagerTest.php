@@ -3,11 +3,12 @@ declare(strict_types=1);
 
 namespace Unit;
 
-use Autoframe\Database\Connection\AfrDbConnectionManager;
+use Autoframe\Database\Connection\AfrDbConnectionManagerClass;
+use Autoframe\Database\Connection\AfrDbConnectionManagerInterface;
 use PDO;
 use PHPUnit\Framework\TestCase;
 
-class AfrDbConnectionManagerX extends AfrDbConnectionManager{
+class AfrDbConnectionManagerX extends AfrDbConnectionManagerClass{
     public function parseDSNInfoX(string $sDSN): array
     {
         return $this->parseDSNInfo($sDSN);
@@ -141,7 +142,7 @@ class AfrDbConnectionManagerTest extends TestCase
             $aModel[2] = [8001, 2638, 1433, 1433, 3050, 56789, 9800, 3306, 1521, 50000, 5432,][rand(0, 10)];
             $aModel[4] = str_replace('$port', (string)$aModel[2], $aModel[4]);
         } else {
-            $aModel[2] = AfrDbConnectionManager::DRIVERS_PORTS[$sDriver];
+            $aModel[2] = AfrDbConnectionManagerClass::DRIVERS_PORTS[$sDriver];
         }
 
         $dbname = ['myDb','DaTa-Base'][rand(0, 1)];
@@ -162,10 +163,10 @@ class AfrDbConnectionManagerTest extends TestCase
         $aInfo = $this->oManager->parseDSNInfoX($DSN);
         $sInfo = json_encode($aInfo);
 
-        $this->assertSame($driver, $aInfo[AfrDbConnectionManager::DRIVER],$sInfo);
-        $this->assertSame($host, $aInfo[AfrDbConnectionManager::HOST],$sInfo);
-        $this->assertSame($port, $aInfo[AfrDbConnectionManager::PORT],$sInfo);
-        $this->assertSame($dbname, $aInfo[AfrDbConnectionManager::DBNAME],$sInfo);
+        $this->assertSame($driver, $aInfo[AfrDbConnectionManagerInterface::DRIVER],$sInfo);
+        $this->assertSame($host, $aInfo[AfrDbConnectionManagerInterface::HOST],$sInfo);
+        $this->assertSame($port, $aInfo[AfrDbConnectionManagerInterface::PORT],$sInfo);
+        $this->assertSame($dbname, $aInfo[AfrDbConnectionManagerInterface::DBNAME],$sInfo);
     }
 
     /**
@@ -186,8 +187,8 @@ class AfrDbConnectionManagerTest extends TestCase
 
         $aAliasInfo = $this->oManager->getAliasInfo($sAlias2);
         //$this->assertSame($this->oManager->aAliases, $aAliasInfo, print_r($aAliasInfo, true));
-        $this->assertSame($aAliasInfo[AfrDbConnectionManager::INFO][AfrDbConnectionManager::DRIVER], 'sqlite', print_r($aAliasInfo, true));
-        $this->assertSame($aAliasInfo[AfrDbConnectionManager::INFO][AfrDbConnectionManager::HOST], $sLocalDB, print_r($aAliasInfo, true));
+        $this->assertSame($aAliasInfo[AfrDbConnectionManagerInterface::INFO][AfrDbConnectionManagerInterface::DRIVER], 'sqlite', print_r($aAliasInfo, true));
+        $this->assertSame($aAliasInfo[AfrDbConnectionManagerInterface::INFO][AfrDbConnectionManagerInterface::HOST], $sLocalDB, print_r($aAliasInfo, true));
 
 
         $oConn1 = $this->oManager->getConnectionByAlias($sAlias);

@@ -2,7 +2,7 @@
 
 namespace Autoframe\Database\Orm\Migrate;
 
-use Autoframe\Database\Connection\AfrDbConnectionManager;
+use Autoframe\Database\Connection\AfrDbConnectionManagerFacade;
 use Autoframe\Database\Connection\Exception\AfrDatabaseConnectionException;
 use Autoframe\Database\Orm\Action\ConvertFacade as ConvertSwitch;
 use Autoframe\Database\Orm\Action\CnxActionFacade;

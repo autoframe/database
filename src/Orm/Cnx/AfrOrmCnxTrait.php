@@ -3,7 +3,7 @@
 namespace Autoframe\Database\Orm\Cnx;
 
 
-use Autoframe\Database\Connection\AfrDbConnectionManager;
+use Autoframe\Database\Connection\AfrDbConnectionManagerFacade;
 use Autoframe\Database\Connection\AfrDbConnectionManagerInterface;
 use Autoframe\Database\Connection\Exception\AfrDatabaseConnectionException;
 use Autoframe\Database\Orm\Blueprint\AfrOrmBlueprintInterface;
@@ -76,7 +76,7 @@ trait AfrOrmCnxTrait
 
     protected static function _ORM_Cnx_Manager(): AfrDbConnectionManagerInterface
     {
-        return AfrDbConnectionManager::getInstance();
+        return AfrDbConnectionManagerFacade::getInstance();
     }
 
 }

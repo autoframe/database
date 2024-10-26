@@ -50,10 +50,10 @@ use Autoframe\Database\Orm\Blueprint\AfrOrmBlueprintInterface;
  */
 class Convert implements ConvertInterface
 {
-    use Syntax;
-    use EscapeTrait;
-    use SqlToBp;
-    use BpToSql;
-    use CnxActionSingletonTrait;
+	use Syntax;
+	use EscapeTrait;
+	use SqlToBp;
+	use BpToSql;
+	use CnxActionSingletonTrait;
 }
 
